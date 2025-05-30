@@ -7,9 +7,15 @@
 var app = require('../app');
 var debug = require('debug')('my-app:server');
 var http = require('http');
+var dotenv = require('dotenv');
+var { getEnvPath } = require('../common/util');
 
 
-// require('dotenv').config({ path: '../env/path/.env.development' });
+const envConfig = dotenv.config({
+  path: getEnvPath(), // 配置文件路径
+  encoding: 'utf8', // 编码方式，默认utf8
+  debug: false, // 是否开启debug，默认false
+}).parsed;
 
 /**
  * Get port from environment and store in Express.
