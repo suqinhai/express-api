@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 
-var sequelize = require('./common/mysql/index')
+var { sequelize } = require('./common/index')
 
 var indexRouter = require('./routes/index');
 var app = express();

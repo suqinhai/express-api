@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { registerConfigModel } = require('../../../models');
-const { validateAdmin } = require('../../../middleware/auth');
+const { validateAdmin } = require('../../../middleware/index');
 
 // 获取注册配置
 router.get('/config', async (req, res) => {

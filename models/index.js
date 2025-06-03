@@ -1,4 +1,4 @@
-const sequelize = require('../common/mysql/index');
+const { sequelize } = require('../common/index');
 const userModel = require('./users/user');
 const registerConfigModel = require('./users/registerConfig');
 
