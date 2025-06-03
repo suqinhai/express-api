@@ -1,8 +1,8 @@
 
 
 
-const userModel = require('./user');
-const registerConfigModel = require('./registerConfig');
+const userModel = require('./users/user');
+const registerConfigModel = require('./users/registerConfig');
 
 module.exports = {
   userModel,
