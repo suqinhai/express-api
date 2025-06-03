@@ -22,7 +22,7 @@ const validateAdmin = async (req, res, next) => {
     }
 
     // 验证token
-    const decoded = verifyToken(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = verifyToken(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({
         code: 401,

@@ -6,9 +6,6 @@ const jwt = require('jsonwebtoken');
 // 引入用户模型
 const { userModel } = require('../../../models');
 
-// JWT密钥，实际应用中应存储在环境变量中
-const JWT_SECRET = 'your-secret-key';
-
 /**
  * 用户登录接口
  * @route POST /user/login
@@ -71,7 +68,7 @@ router.post('/', async (req, res) => {
         id: user.id, 
         username: user.username 
       },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     
