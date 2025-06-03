@@ -1,5 +1,6 @@
 const sequelize = require('../common/mysql');
 const userModel = require('../models/user');
+const registerConfigModelDefinition = require('../models/users/registerConfig');
 
 async function syncDatabase() {
   try {

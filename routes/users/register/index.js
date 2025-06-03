@@ -19,10 +19,10 @@ router.get('/config', async (req, res) => {
       message: '获取成功'
     });
   } catch (error) {
-    console.error('获取注册配置失败:', error);
+    console.error('获取注册配置失败:', error.message, error.stack, error.original);
     res.status(500).json({
       code: 500,
-      message: '获取注册配置失败'
+      message: `获取注册配置失败: ${error.message || 'Undetailed error'}`
     });
   }
 });
@@ -45,9 +45,7 @@ router.post('/config', validateAdmin, async (req, res) => {
       facebookSecret
     } = req.body;
 
-    let config = await registerConfigModel.findOne({
-      order: [['id', 'DESC']]
-    });
+    let config = await registerConfigModel.findOne();
     
     // 如果没有配置记录，创建一个新的
     if (!config) {
@@ -82,10 +80,10 @@ router.post('/config', validateAdmin, async (req, res) => {
       message: '更新成功'
     });
   } catch (error) {
-    console.error('更新注册配置失败:', error);
+    console.error('更新注册配置失败:', error.message, error.stack, error.original);
     res.status(500).json({
       code: 500,
-      message: '更新注册配置失败'
+      message: `更新注册配置失败: ${error.message || 'Undetailed error'}`
     });
   }
 });
