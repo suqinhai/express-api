@@ -30,12 +30,12 @@ const validateAdmin = async (req, res, next) => {
       });
     }
 
-    // 查找用户并验证是否为管理员
+    // 查找用户
     const user = await userModel.findByPk(decoded.userId);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({
-        code: 403,
-        message: '没有管理员权限'
+    if (!user) {
+      return res.status(400).json({
+        code: 400,
+        message: '用户不存在'
       });
     }
 

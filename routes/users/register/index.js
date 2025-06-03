@@ -28,7 +28,7 @@ router.get('/config', async (req, res) => {
 });
 
 // 更新注册配置
-router.put('/config', validateAdmin, async (req, res) => {
+router.post('/config', validateAdmin, async (req, res) => {
   try {
     const {
       realNameVerification,
