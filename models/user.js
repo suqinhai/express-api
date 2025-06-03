@@ -23,6 +23,12 @@ module.exports = (sequelize) => {
         isEmail: true
       }
     },
+    role: {
+      type: DataTypes.ENUM('user', 'admin'),
+      defaultValue: 'user',
+      allowNull: false,
+      comment: '用户角色'
+    },
     status: {
       type: DataTypes.ENUM('active', 'inactive'),
       defaultValue: 'active'
