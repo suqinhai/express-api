@@ -7,62 +7,62 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    realNameVerification: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: '真实姓名验证开启状态'
+    real_name_verification: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '真实姓名验证开启状态(0:关闭,1:开启)'
     },
-    realNameRequired: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: '真实姓名是否必填'
+    real_name_required: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '真实姓名是否必填(0:否,1:是)'
     },
-    phoneVerification: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: '手机验证开启状态'
+    phone_verification: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '手机验证开启状态(0:关闭,1:开启)'
     },
-    phoneRequired: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: '手机是否必填'
+    phone_required: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '手机是否必填(0:否,1:是)'
     },
-    phoneVerificationCode: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      comment: '是否开启手机验证码'
+    phone_verification_code: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '是否开启手机验证码(0:否,1:是)'
     },
-    captchaType: {
-      type: DataTypes.ENUM('none', 'image', 'number'),
-      defaultValue: 'none',
-      comment: '验证码类型：无/图形验证码/数字验证码'
+    captcha_type: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '验证码类型(0:无,1:图形验证码,2:数字验证码)'
     },
-    googleAuthEnabled: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: '谷歌授权开启状态'
+    google_auth_enabled: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '谷歌授权开启状态(0:关闭,1:开启)'
     },
-    googleAppId: {
+    google_appId: {
       type: DataTypes.STRING,
       allowNull: true,
       comment: '谷歌应用ID'
     },
-    googleSecret: {
+    google_secret: {
       type: DataTypes.STRING,
       allowNull: true,
       comment: '谷歌应用密钥'
     },
-    facebookAuthEnabled: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: 'Facebook授权开启状态'
+    facebook_auth_enabled: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: 'Facebook授权开启状态(0:关闭,1:开启)'
     },
-    facebookAppId: {
+    facebook_appId: {
       type: DataTypes.STRING,
       allowNull: true,
       comment: 'Facebook应用ID'
     },
-    facebookSecret: {
+    facebook_secret: {
       type: DataTypes.STRING,
       allowNull: true,
       comment: 'Facebook应用密钥'
