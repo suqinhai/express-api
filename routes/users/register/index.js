@@ -7,7 +7,7 @@ const { validateAdmin } = require('../../../middleware/index');
 router.get('/config', async (req, res) => {
   try {
     let config = await registerConfigModel.findOne();
-    console.log(config);
+
     // 如果没有配置记录，创建默认配置
     if (!config) {
       config = await registerConfigModel.create({});
