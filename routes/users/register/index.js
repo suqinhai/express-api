@@ -7,7 +7,7 @@ const { validateAdmin } = require('../../../middleware/auth');
 router.get('/config', async (req, res) => {
   try {
     let config = await registerConfigModel.findOne();
-    
+    console.log(config);
     // 如果没有配置记录，创建默认配置
     if (!config) {
       config = await registerConfigModel.create({});
@@ -45,7 +45,9 @@ router.post('/config', validateAdmin, async (req, res) => {
       facebookSecret
     } = req.body;
 
-    let config = await registerConfigModel.findOne();
+    let config = await registerConfigModel.findOne({
+      order: [['id', 'DESC']]
+    });
     
     // 如果没有配置记录，创建一个新的
     if (!config) {
@@ -67,6 +69,11 @@ router.post('/config', validateAdmin, async (req, res) => {
       facebookAppId,
       facebookSecret,
       updated_at: new Date()
+    });
+
+    // 重新获取更新后的配置
+    config = await registerConfigModel.findOne({
+      where: { id: config.id }
     });
 
     res.json({
