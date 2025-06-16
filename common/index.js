@@ -11,7 +11,7 @@ module.exports = {
     sequelize,
     redis,
     schedule,
-    i18n
+    ...i18n
 };
 
 

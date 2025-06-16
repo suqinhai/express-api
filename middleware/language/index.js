@@ -3,7 +3,7 @@
  * 处理语言偏好的检测和设置
  */
 
-const { getI18n } = require('../../common/i18n');
+const { getI18n } = require('../../common/index');
 
 /**
  * 语言变更中间件
