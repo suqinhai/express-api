@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { asyncHandler } = require('../../../common');
+const { asyncHandler, sendBadRequest, sendUnauthorized, sendSuccess } = require('../../../common');
 
 // 引入用户模型
 const { userModel } = require('../../../models');
@@ -22,10 +22,7 @@ router.post('/', asyncHandler(async (req, res) => {
   
   // 参数验证
   if (!username || !password) {
-    return res.status(400).json({ 
-      success: false, 
-      message: '用户名和密码不能为空' 
-    });
+    return sendBadRequest(res, '用户名和密码不能为空');
   }
   
   // 获取数据库连接
@@ -41,20 +38,14 @@ router.post('/', asyncHandler(async (req, res) => {
   
   // 用户不存在
   if (!user) {
-    return res.status(401).json({ 
-      success: false, 
-      message: '用户名或密码错误' 
-    });
+    return sendUnauthorized(res, '用户名或密码错误');
   }
   
   // 验证密码
   const isPasswordValid = await bcrypt.compare(password, user.password);
   
   if (!isPasswordValid) {
-    return res.status(401).json({ 
-      success: false, 
-      message: '用户名或密码错误' 
-    });
+    return sendUnauthorized(res, '用户名或密码错误');
   }
   
   // 更新最后登录时间
@@ -73,18 +64,14 @@ router.post('/', asyncHandler(async (req, res) => {
   );
   
   // 返回成功响应
-  res.json({
-    success: true,
-    message: '登录成功',
-    data: {
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        status: user.status,
-        last_login: user.last_login
-      }
+  return sendSuccess(res, '登录成功', {
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      status: user.status,
+      last_login: user.last_login
     }
   });
 }));
