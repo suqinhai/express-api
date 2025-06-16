@@ -5,14 +5,14 @@ const { validateAdmin } = require('../../../middleware/index');
 const { asyncHandler } = require('../../../common');
 
 // 获取注册配置
-router.get('/config', asyncHandler(async (req, res) => {
+router.get('/config', validateAdmin, asyncHandler(async (req, res) => {
   let config = await registerConfigModel.findOne();
 
   // 如果没有配置记录，创建默认配置
   if (!config) {
     config = await registerConfigModel.create({});
   }
-  
+
   return res.sendSuccess('获取成功', config);
 }));
 
@@ -34,7 +34,7 @@ router.post('/config', validateAdmin, asyncHandler(async (req, res) => {
   } = req.body;
 
   let config = await registerConfigModel.findOne();
-  
+
   // 如果没有配置记录，创建一个新的
   if (!config) {
     config = await registerConfigModel.create({});

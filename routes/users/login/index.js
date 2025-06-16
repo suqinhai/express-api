@@ -19,50 +19,50 @@ const { userModel } = require('../../../models');
  */
 router.post('/', asyncHandler(async (req, res) => {
   const { username, password } = req.body;
-  
+
   // 参数验证
   if (!username || !password) {
     return res.sendBadRequest('用户名和密码不能为空');
   }
-  
+
   // 获取数据库连接
   const sequelize = req.sequelize;
-  
+
   // 初始化用户模型
   const User = userModel(sequelize);
-  
+
   // 查询用户
-  const user = await User.findOne({ 
+  const user = await User.findOne({
     where: { username: username }
   });
-  
+
   // 用户不存在
   if (!user) {
     return res.sendUnauthorized('用户名或密码错误');
   }
-  
+
   // 验证密码
   const isPasswordValid = await bcrypt.compare(password, user.password);
-  
+
   if (!isPasswordValid) {
     return res.sendUnauthorized('用户名或密码错误');
   }
-  
+
   // 更新最后登录时间
   await user.update({
     last_login: new Date()
   });
-  
+
   // 生成JWT令牌
   const token = jwt.sign(
-    { 
-      id: user.id, 
-      username: user.username 
+    {
+      id: user.id,
+      username: user.username
     },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );
-  
+
   // 返回成功响应
   return res.sendSuccess('登录成功', {
     token,
