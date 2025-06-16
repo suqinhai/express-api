@@ -49,9 +49,9 @@ const initI18n = async () => {
       // 文件系统后端配置
       backend: {
         // 存储翻译文件的路径
-        loadPath: path.join(__dirname, '../../locales/{{lng}}/{{ns}}.json'),
+        loadPath: path.join(__dirname, '../locales/{{lng}}/{{ns}}.json'),
         // 添加新翻译的路径 (可选)
-        addPath: path.join(__dirname, '../../locales/{{lng}}/{{ns}}.missing.json')
+        addPath: path.join(__dirname, '../locales/{{lng}}/{{ns}}.missing.json')
       },
       
       // 翻译内容相关选项
