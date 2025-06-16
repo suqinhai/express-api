@@ -11,11 +11,6 @@
 const asyncHandler = (handler) => {
     return async (req, res, next) => {
       try {
-        res.sendSuccess = sendSuccess;
-        res.sendError = sendError;
-        res.sendBadRequest = sendBadRequest;
-        res.sendUnauthorized = sendUnauthorized;
-        res.sendResponse = sendResponse;
         await handler(req, res, next);
       } catch (error) {
         console.error(`路由错误: ${error.message}`, error.stack, error.original || '');
