@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { registerConfigModel } = require('../../../models');
 const { validateAdmin } = require('../../../middleware/index');
-const { asyncHandler, sendSuccess } = require('../../../common');
+const { asyncHandler } = require('../../../common');
 
 // 获取注册配置
 router.get('/config', asyncHandler(async (req, res) => {
@@ -13,7 +13,7 @@ router.get('/config', asyncHandler(async (req, res) => {
     config = await registerConfigModel.create({});
   }
   
-  return sendSuccess(res, '获取成功', config);
+  return res.sendSuccess('获取成功', config);
 }));
 
 // 更新注册配置
@@ -62,7 +62,7 @@ router.post('/config', validateAdmin, asyncHandler(async (req, res) => {
     where: { id: config.id }
   });
 
-  return sendSuccess(res, '更新成功', config);
+  return res.sendSuccess('更新成功', config);
 }));
 
 module.exports = router;
