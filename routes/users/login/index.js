@@ -22,7 +22,7 @@ router.post('/', asyncHandler(async (req, res) => {
 
   // 参数验证
   if (!username || !password) {
-    return res.sendBadRequest('用户名和密码不能为空');
+    return res.sendBadRequest('user.login.emptyFields');
   }
 
   // 获取数据库连接
@@ -38,14 +38,14 @@ router.post('/', asyncHandler(async (req, res) => {
 
   // 用户不存在
   if (!user) {
-    return res.sendUnauthorized('用户名或密码错误');
+    return res.sendUnauthorized('user.login.invalidCredentials');
   }
 
   // 验证密码
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    return res.sendUnauthorized('用户名或密码错误');
+    return res.sendUnauthorized('user.login.invalidCredentials');
   }
 
   // 更新最后登录时间
@@ -64,7 +64,7 @@ router.post('/', asyncHandler(async (req, res) => {
   );
 
   // 返回成功响应
-  return res.sendSuccess('登录成功', {
+  return res.sendSuccess('user.login.success', {
     token,
     user: {
       id: user.id,

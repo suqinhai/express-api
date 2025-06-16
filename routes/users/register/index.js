@@ -13,7 +13,7 @@ router.get('/config', validateAdmin, asyncHandler(async (req, res) => {
     config = await registerConfigModel.create({});
   }
 
-  return res.sendSuccess('获取成功', config);
+  return res.sendSuccess('user.register.configGetSuccess', config);
 }));
 
 // 更新注册配置
@@ -62,7 +62,7 @@ router.post('/config', validateAdmin, asyncHandler(async (req, res) => {
     where: { id: config.id }
   });
 
-  return res.sendSuccess('更新成功', config);
+  return res.sendSuccess('user.register.configUpdateSuccess', config);
 }));
 
 module.exports = router;
