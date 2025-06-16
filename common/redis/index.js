@@ -4,7 +4,7 @@ const Redis = require('ioredis');
 const redis = new Redis({
   host: 'localhost', // Redis 服务器地址
   port: 6379,       // 默认端口
-  password: 'your_password', // 如果有密码
+  password: '', // 如果有密码
   db: 0             // 选择数据库（默认 0）
 });
 
