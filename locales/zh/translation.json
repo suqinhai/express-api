@@ -1,0 +1,28 @@
+{
+  "common": {
+    "success": "操作成功",
+    "error": "操作失败",
+    "badRequest": "参数错误",
+    "unauthorized": "未授权访问",
+    "notFound": "资源不存在",
+    "serverError": "服务器错误"
+  },
+  "user": {
+    "login": {
+      "success": "登录成功",
+      "invalidCredentials": "用户名或密码错误",
+      "emptyFields": "用户名和密码不能为空"
+    },
+    "register": {
+      "success": "注册成功",
+      "configUpdateSuccess": "更新成功",
+      "configGetSuccess": "获取成功"
+    }
+  },
+  "validation": {
+    "required": "{{field}}不能为空",
+    "invalidFormat": "{{field}}格式无效",
+    "tooShort": "{{field}}太短，最少需要{{min}}个字符",
+    "tooLong": "{{field}}太长，最多允许{{max}}个字符"
+  }
+} 

@@ -6,16 +6,27 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 
-var { sequelize, redis, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse } = require('./common/index')
+var { sequelize, redis, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, i18n } = require('./common/index')
 
 var indexRouter = require('./routes/index');
 var app = express();
+
+// 初始化i18n
+(async () => {
+  try {
+    await i18n.initI18n();
+    console.log('i18n initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize i18n:', error);
+  }
+})();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-
+// 添加i18n中间件 (必须在其他路由之前)
+app.use(i18n.createMiddleware());
 
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {

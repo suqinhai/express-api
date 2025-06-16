@@ -1,0 +1,28 @@
+{
+  "common": {
+    "success": "Operation successful",
+    "error": "Operation failed",
+    "badRequest": "Invalid parameters",
+    "unauthorized": "Unauthorized access",
+    "notFound": "Resource not found",
+    "serverError": "Server error"
+  },
+  "user": {
+    "login": {
+      "success": "Login successful",
+      "invalidCredentials": "Invalid username or password",
+      "emptyFields": "Username and password cannot be empty"
+    },
+    "register": {
+      "success": "Registration successful",
+      "configUpdateSuccess": "Update successful",
+      "configGetSuccess": "Retrieved successfully"
+    }
+  },
+  "validation": {
+    "required": "{{field}} cannot be empty",
+    "invalidFormat": "{{field}} format is invalid",
+    "tooShort": "{{field}} is too short, minimum {{min}} characters required",
+    "tooLong": "{{field}} is too long, maximum {{max}} characters allowed"
+  }
+} 
