@@ -20,12 +20,12 @@ const asyncHandler = (handler) => {
         const i18n = getI18n();
         res.status(500).json({
           code: 500,
-          message: `${i18n.t('common.error')}: ${error.message || 'Undetailed error'}`
+          message: `${i18n.t('操作失败')}: ${error.message || 'Undetailed error'}`
         });
       }
     };
   };
-  
+
 /**
  * 翻译消息文本
  * @param {Object} req - Express 请求对象
@@ -37,9 +37,9 @@ const translateMessage = (req, message, options = {}) => {
   // 获取i18next实例
   const i18n = getI18n();
   
-  // 如果消息看起来像翻译键（包含点号的简短字符串），尝试翻译
-  if (typeof message === 'string' && message.includes('.') && message.length < 100) {
-    // 使用i18next进行翻译，如果找不到对应的翻译，i18next会返回键名本身
+  // 如果消息是字符串且长度合理，尝试翻译
+  if (typeof message === 'string' && message.length < 100) {
+    // 直接尝试翻译，无论是中文键还是点号格式的旧键
     return i18n.t(message, options);
   }
   
@@ -80,7 +80,7 @@ const sendResponse = (res, status, success, message, data = null) => {
  * @param {Object} data - 附加数据
  * @returns {Object} Express 响应
  */
-const sendError = (res, status = 400, message = 'common.error', data = null) => {
+const sendError = (res, status = 400, message = '操作失败', data = null) => {
   return sendResponse(res, status, false, message, data);
 };
 
@@ -91,7 +91,7 @@ const sendError = (res, status = 400, message = 'common.error', data = null) => 
  * @param {Object} data - 响应数据
  * @returns {Object} Express 响应
  */
-const sendSuccess = (res, message = 'common.success', data = null) => {
+const sendSuccess = (res, message = '操作成功', data = null) => {
   return sendResponse(res, 200, true, message, data);
 };
 
@@ -101,7 +101,7 @@ const sendSuccess = (res, message = 'common.success', data = null) => {
  * @param {String} message - 错误消息或翻译键
  * @returns {Object} Express 响应
  */
-const sendBadRequest = (res, message = 'common.badRequest') => {
+const sendBadRequest = (res, message = '参数错误') => {
   return sendError(res, 400, message);
 };
 
@@ -111,7 +111,7 @@ const sendBadRequest = (res, message = 'common.badRequest') => {
  * @param {String} message - 错误消息或翻译键
  * @returns {Object} Express 响应
  */
-const sendUnauthorized = (res, message = 'common.unauthorized') => {
+const sendUnauthorized = (res, message = '未授权访问') => {
   return sendError(res, 401, message);
 };
 
