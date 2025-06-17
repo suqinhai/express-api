@@ -23,7 +23,6 @@ var app = express();
 // 添加i18n中间件 (必须在其他路由之前)
 app.use(createMiddleware());
 
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
