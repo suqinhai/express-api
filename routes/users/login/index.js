@@ -91,7 +91,7 @@ router.post('/', asyncHandler(async (req, res) => {
   }
 
   // 获取数据库连接
-  const sequelize = req.sequelize;
+  const sequelize = res.sequelize;
 
   // 使用缓存机制获取用户信息
   const user = await CacheManager.getOrFetch(
