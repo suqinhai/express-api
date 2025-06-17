@@ -20,13 +20,13 @@ var app = express();
     console.error('Failed to initialize i18n:', error);
   }
 })();
+// 添加i18n中间件 (必须在其他路由之前)
+app.use(createMiddleware());
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
-// 添加i18n中间件 (必须在其他路由之前)
-app.use(createMiddleware());
 
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {
