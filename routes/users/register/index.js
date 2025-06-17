@@ -5,7 +5,7 @@ const { validateAdmin } = require('../../../middleware/index');
 const { asyncHandler } = require('../../../common');
 
 // 获取注册配置
-router.get('/config', validateAdmin, asyncHandler(async (req, res) => {
+router.get('/config', asyncHandler(async (req, res) => {
   let config = await registerConfigModel.findOne();
 
   // 如果没有配置记录，创建默认配置

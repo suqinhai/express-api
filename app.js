@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 
-var { sequelize, redis, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware, extendReqRes } = require('./common/index')
+var { sequelize, redis, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
 
 var indexRouter = require('./routes/index');
 var app = express();
@@ -28,18 +28,14 @@ app.set('view engine', 'ejs');
 // 添加i18n中间件 (必须在其他路由之前)
 app.use(createMiddleware());
 
-// 添加扩展请求响应对象的中间件，提供国际化功能
-app.use(extendReqRes);
-
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {
-  req.sequelize = sequelize;
-  req.redis = redis;
-  res.sendSuccess = sendSuccess;
-  res.sendError = sendError;
-  res.sendBadRequest = sendBadRequest;
-  res.sendUnauthorized = sendUnauthorized;
-  res.sendResponse = sendResponse;
+  res.sequelize = sequelize;
+  res.redis = redis;
+  res.sendResponse = (status, success, message, options) => sendResponse(res, status, success, message, options);
+  res.sendSuccess = (message, options) => sendSuccess(res, message, options);
+  res.sendBadRequest = (message, options) => sendBadRequest(res, message, options);
+  res.sendUnauthorized = (message, options) => sendUnauthorized(res, message, options);
   next();
 });
 app.use(logger('dev'));
