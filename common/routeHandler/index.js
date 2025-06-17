@@ -118,7 +118,6 @@ const sendUnauthorized = (res, message = '未授权访问', options = {}) => {
 module.exports = {
   asyncHandler,
   sendResponse,
-  sendError,
   sendSuccess,
   sendBadRequest,
   sendUnauthorized,
