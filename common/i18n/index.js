@@ -44,7 +44,8 @@ const initI18n = async () => {
       defaultNS: 'translation',
       
       // 调试模式（生产环境中应设为false）
-      debug: process.env.NODE_ENV === 'dev',
+      // debug: process.env.NODE_ENV === 'dev',
+      debug: false,
       
       // 文件系统后端配置
       backend: {
