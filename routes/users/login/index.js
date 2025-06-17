@@ -19,7 +19,7 @@ async function getUserByUsername(sequelize, username) {
   try {
     // 初始化用户模型
     const User = userModel(sequelize);
-    
+
     return await User.findOne({
       where: { username: username }
     });
@@ -52,18 +52,14 @@ async function cacheUserToken(userId, token) {
  */
 async function cacheUserInfo(user) {
   if (!user || !user.id) return false;
-  
+
   try {
     // 创建不包含密码的用户信息
     const userInfo = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-      last_login: user.last_login
+      ...user
     };
-    
+    delete userInfo.password;
+
     // 缓存用户信息，使用中等时长缓存
     return await CacheManager.set(PREFIX.USER, user.id, userInfo, TTL.MEDIUM);
   } catch (error) {
@@ -95,7 +91,7 @@ router.post('/', asyncHandler(async (req, res) => {
 
   // 使用缓存机制获取用户信息
   const user = await CacheManager.getOrFetch(
-    PREFIX.USER, 
+    PREFIX.USER,
     `by-username:${username}`,
     () => getUserByUsername(sequelize, username),
     TTL.SHORT // 短时间缓存用户名查询结果

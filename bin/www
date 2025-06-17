@@ -22,8 +22,8 @@ const envConfig = dotenv.config({
 const numCPUs = os.cpus().length;
 
 // 检查是否启用集群模式 (通过环境变量 CLUSTER_MODE)
-// const clusterMode = process.env.CLUSTER_MODE === 'true';
-const clusterMode = true;
+const clusterMode = process.env.CLUSTER_MODE === 'true';
+
 
 if (clusterMode && cluster.isMaster) {
   // 主进程逻辑
