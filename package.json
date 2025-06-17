@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "cross-env NODE_ENV=dev nodemon ./bin/www"
+    "start": "cross-env NODE_ENV=dev nodemon ./bin/www",
+    "start:prod": "cross-env NODE_ENV=production CLUSTER_MODE=true node ./bin/www",
+    "start:prod:single": "cross-env NODE_ENV=production CLUSTER_MODE=false node ./bin/www"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

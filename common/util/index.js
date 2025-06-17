@@ -1,4 +1,5 @@
 const path = require('path');
+const clusterLogger = require('../logger/clusterLogger');
 
 /**
  * 获取环境变量配置文件路径
@@ -10,4 +11,5 @@ function getEnvPath() {
 
 module.exports = {
     getEnvPath,
+    clusterLogger,
 };
