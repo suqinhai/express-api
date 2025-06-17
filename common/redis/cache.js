@@ -4,7 +4,7 @@
  */
 
 const { redis, TTL, PREFIX, generateKey } = require('./index');
-const { logger } = require('../util');
+const logger = require('../logger');
 const { LOG_CATEGORIES } = logger;
 
 /**
@@ -21,31 +21,31 @@ class CacheManager {
     const key = generateKey(type, id);
     const startTime = Date.now();
     let hit = false;
-    
+
     try {
       const data = await redis.get(key);
-      
+
       if (!data) {
         // 记录缓存未命中日志
         const duration = Date.now() - startTime;
         logger.logCachePerformance('GET', duration, key, false);
         return null;
       }
-      
+
       hit = true;
       const result = JSON.parse(data);
-      
+
       // 记录缓存命中日志
       const duration = Date.now() - startTime;
       logger.logCachePerformance('GET', duration, key, true);
-      
+
       return result;
     } catch (error) {
       // 记录缓存错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `缓存读取错误: ${key}`, error);
       logger.logCachePerformance('GET', duration, key, hit);
-      
+
       return null; // 读取缓存失败时返回null，以便回退到数据库查询
     }
   }
@@ -61,29 +61,29 @@ class CacheManager {
   static async set(type, id, data, ttl = TTL.MEDIUM) {
     const key = generateKey(type, id);
     const startTime = Date.now();
-    
+
     try {
       const value = JSON.stringify(data);
-      
+
       // 对象过大时进行日志记录
       if (value.length > 1024 * 100) { // 100KB
-        logger.log(logger.LOG_LEVELS.WARN, LOG_CATEGORIES.CACHE, `大对象缓存警告: ${key} 大小为 ${Math.round(value.length/1024)}KB`);
+        logger.log(logger.LOG_LEVELS.WARN, LOG_CATEGORIES.CACHE, `大对象缓存警告: ${key} 大小为 ${Math.round(value.length / 1024)}KB`);
       }
-      
+
       // 使用 set 命令并设置过期时间
       await redis.set(key, value, 'EX', ttl);
-      
+
       // 记录缓存设置日志
       const duration = Date.now() - startTime;
       logger.logCachePerformance('SET', duration, key);
-      
+
       return true;
     } catch (error) {
       // 记录缓存错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `缓存写入错误: ${key}`, error);
       logger.logCachePerformance('SET', duration, key);
-      
+
       return false; // 设置缓存失败时返回false
     }
   }
@@ -97,21 +97,21 @@ class CacheManager {
   static async delete(type, id) {
     const key = generateKey(type, id);
     const startTime = Date.now();
-    
+
     try {
       await redis.del(key);
-      
+
       // 记录缓存删除日志
       const duration = Date.now() - startTime;
       logger.logCachePerformance('DEL', duration, key);
-      
+
       return true;
     } catch (error) {
       // 记录缓存错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `缓存删除错误: ${key}`, error);
       logger.logCachePerformance('DEL', duration, key);
-      
+
       return false;
     }
   }
@@ -123,33 +123,33 @@ class CacheManager {
    */
   static async clearByType(type) {
     const startTime = Date.now();
-    
+
     try {
       // 使用 keys 命令查找特定前缀的所有键
       const keys = await redis.keys(`${type}*`);
-      
+
       if (keys.length === 0) {
         // 记录缓存清除日志
         const duration = Date.now() - startTime;
         logger.logCachePerformance('CLEAR', duration, type);
         return true;
       }
-      
+
       // 使用 del 命令删除所有找到的键
       await redis.del(keys);
-      
+
       // 记录缓存清除日志
       const duration = Date.now() - startTime;
       logger.log(logger.LOG_LEVELS.INFO, LOG_CATEGORIES.CACHE, `清除缓存类型: ${type}, 删除了 ${keys.length} 个键`);
       logger.logCachePerformance('CLEAR', duration, type);
-      
+
       return true;
     } catch (error) {
       // 记录缓存错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `缓存清除错误: ${type}`, error);
       logger.logCachePerformance('CLEAR', duration, type);
-      
+
       return false;
     }
   }
@@ -166,46 +166,46 @@ class CacheManager {
     const key = generateKey(type, id);
     const startTime = Date.now();
     let hit = false;
-    
+
     try {
       // 尝试从缓存获取
       const cachedData = await this.get(type, id);
-      
+
       // 如果缓存中存在数据，直接返回
       if (cachedData !== null) {
         hit = true;
         return cachedData;
       }
-      
+
       // 记录缓存未命中
       logger.log(logger.LOG_LEVELS.DEBUG, LOG_CATEGORIES.CACHE, `缓存未命中: ${key}`);
-      
+
       // 记录数据源获取开始时间
       const fetchStartTime = Date.now();
-      
+
       // 否则从数据源获取数据
       const freshData = await fetchFunction();
-      
+
       // 记录数据源获取时间
       const fetchDuration = Date.now() - fetchStartTime;
       logger.logDatabasePerformance('查询', fetchDuration, `缓存回退查询: ${key}`);
-      
+
       // 缓存获取的数据（如果不为null或undefined）
       if (freshData != null) {
         await this.set(type, id, freshData, ttl);
       }
-      
+
       // 记录整体处理时间
       const totalDuration = Date.now() - startTime;
       logger.log(logger.LOG_LEVELS.DEBUG, LOG_CATEGORIES.CACHE, `缓存包装器处理: ${key}, 耗时: ${totalDuration}ms, 命中: ${hit}`);
-      
+
       return freshData;
     } catch (error) {
       // 记录错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `缓存获取/查询错误: ${key}`, error);
       logger.logCachePerformance('GET_OR_FETCH', duration, key, hit);
-      
+
       // 发生错误时，尝试直接从数据源获取
       try {
         return await fetchFunction();
@@ -226,30 +226,30 @@ class CacheManager {
    */
   static async batchGetOrFetch(type, ids, batchFetchFunction, ttl = TTL.MEDIUM) {
     if (!ids || ids.length === 0) return {};
-    
+
     const startTime = Date.now();
-    
+
     // 创建结果对象
     const result = {};
     const missedIds = [];
-    
+
     try {
       // 生成所有缓存键
       const keys = ids.map(id => generateKey(type, id));
-      
+
       // 批量获取缓存
       const cachedValues = await redis.mget(keys);
-      
+
       // 记录缓存命中率
       const hitCount = cachedValues.filter(val => val !== null && val !== undefined).length;
       const hitRate = (hitCount / ids.length) * 100;
       logger.log(
-        logger.LOG_LEVELS.DEBUG, 
-        LOG_CATEGORIES.CACHE, 
+        logger.LOG_LEVELS.DEBUG,
+        LOG_CATEGORIES.CACHE,
         `批量缓存命中率: ${hitRate.toFixed(2)}% (${hitCount}/${ids.length})`,
         { type, idsCount: ids.length }
       );
-      
+
       // 处理缓存命中的情况
       ids.forEach((id, index) => {
         if (cachedValues[index]) {
@@ -264,43 +264,43 @@ class CacheManager {
           missedIds.push(id);
         }
       });
-      
+
       // 如果有未命中的id，从数据源批量获取
       if (missedIds.length > 0) {
         // 记录数据源获取开始时间
         const fetchStartTime = Date.now();
-        
+
         const fetchedData = await batchFetchFunction(missedIds);
-        
+
         // 记录数据源获取时间
         const fetchDuration = Date.now() - fetchStartTime;
         logger.logDatabasePerformance('批量查询', fetchDuration, `缓存回退批量查询: ${type}`, { missedCount: missedIds.length });
-        
+
         // 将获取的数据添加到结果并缓存
         for (const id in fetchedData) {
           result[id] = fetchedData[id];
-          
+
           // 异步缓存，不等待完成
           this.set(type, id, fetchedData[id], ttl)
             .catch(err => logger.logError(LOG_CATEGORIES.CACHE, `缓存项 ${type}${id} 失败`, err));
         }
       }
-      
+
       // 记录整体处理时间
       const totalDuration = Date.now() - startTime;
       logger.log(
-        logger.LOG_LEVELS.DEBUG, 
-        LOG_CATEGORIES.CACHE, 
+        logger.LOG_LEVELS.DEBUG,
+        LOG_CATEGORIES.CACHE,
         `批量缓存处理完成, 耗时: ${totalDuration}ms, 总数: ${ids.length}, 未命中: ${missedIds.length}`
       );
-      
+
       return result;
     } catch (error) {
       // 记录错误日志
       const duration = Date.now() - startTime;
       logger.logError(LOG_CATEGORIES.CACHE, `批量缓存处理错误: ${type}`, error);
       logger.logCachePerformance('BATCH_GET_OR_FETCH', duration, type);
-      
+
       // 发生错误时，尝试直接从数据源批量获取所有id
       try {
         return await batchFetchFunction(ids);

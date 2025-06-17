@@ -1,5 +1,4 @@
 const path = require('path');
-const logger = require('./logger');
 
 /**
  * 获取环境变量配置文件路径
@@ -11,5 +10,4 @@ function getEnvPath() {
 
 module.exports = {
     getEnvPath,
-    logger
 };
