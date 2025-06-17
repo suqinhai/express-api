@@ -3,9 +3,74 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { asyncHandler } = require('../../../common');
+const CacheManager = require('../../../common/redis/cache');
+const { PREFIX, TTL } = require('../../../common/redis');
 
 // 引入用户模型
 const { userModel } = require('../../../models');
+
+/**
+ * 获取用户信息并缓存
+ * @param {Object} sequelize - Sequelize实例
+ * @param {string} username - 用户名
+ * @returns {Promise<Object|null>} - 用户信息或null
+ */
+async function getUserByUsername(sequelize, username) {
+  try {
+    // 初始化用户模型
+    const User = userModel(sequelize);
+    
+    return await User.findOne({
+      where: { username: username }
+    });
+  } catch (error) {
+    console.error(`获取用户信息失败: ${username}`, error);
+    return null;
+  }
+}
+
+/**
+ * 缓存用户登录token
+ * @param {string} userId - 用户ID
+ * @param {string} token - JWT令牌
+ * @returns {Promise<boolean>} - 是否缓存成功
+ */
+async function cacheUserToken(userId, token) {
+  try {
+    // 缓存用户token，过期时间与JWT一致（24小时）
+    return await CacheManager.set(PREFIX.TOKEN, userId, { token }, TTL.LONG);
+  } catch (error) {
+    console.error(`缓存用户token失败: ${userId}`, error);
+    return false;
+  }
+}
+
+/**
+ * 缓存用户信息
+ * @param {Object} user - 用户对象
+ * @returns {Promise<boolean>} - 是否缓存成功
+ */
+async function cacheUserInfo(user) {
+  if (!user || !user.id) return false;
+  
+  try {
+    // 创建不包含密码的用户信息
+    const userInfo = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      last_login: user.last_login
+    };
+    
+    // 缓存用户信息，使用中等时长缓存
+    return await CacheManager.set(PREFIX.USER, user.id, userInfo, TTL.MEDIUM);
+  } catch (error) {
+    console.error(`缓存用户信息失败: ${user.id}`, error);
+    return false;
+  }
+}
 
 /**
  * 用户登录接口
@@ -28,13 +93,13 @@ router.post('/', asyncHandler(async (req, res) => {
   // 获取数据库连接
   const sequelize = req.sequelize;
 
-  // 初始化用户模型
-  const User = userModel(sequelize);
-
-  // 查询用户
-  const user = await User.findOne({
-    where: { username: username }
-  });
+  // 使用缓存机制获取用户信息
+  const user = await CacheManager.getOrFetch(
+    PREFIX.USER, 
+    `by-username:${username}`,
+    () => getUserByUsername(sequelize, username),
+    TTL.SHORT // 短时间缓存用户名查询结果
+  );
 
   // 用户不存在
   if (!user) {
@@ -62,6 +127,15 @@ router.post('/', asyncHandler(async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );
+
+  // 缓存用户token和信息
+  await Promise.all([
+    cacheUserToken(user.id, token),
+    cacheUserInfo(user)
+  ]);
+
+  // 删除根据用户名查找用户的缓存，确保用户信息更新
+  await CacheManager.delete(PREFIX.USER, `by-username:${username}`);
 
   // 返回成功响应
   return res.sendSuccess('登录成功', {
