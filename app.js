@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 
-var { sequelize, redis, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
+var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
 
 var indexRouter = require('./routes/index');
 var app = express();
@@ -31,7 +31,6 @@ app.use(createMiddleware());
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {
   res.sequelize = sequelize;
-  res.redis = redis;
   res.sendResponse = (status, success, message, options) => sendResponse(res, status, success, message, options);
   res.sendSuccess = (message, options) => sendSuccess(res, message, options);
   res.sendBadRequest = (message, options) => sendBadRequest(res, message, options);

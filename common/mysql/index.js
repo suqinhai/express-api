@@ -26,7 +26,7 @@ const config = {
     // 额外配置
     define: {
         timestamps: false,  // 默认不使用 createAt 和 updateAt
-        underscored: true,  // 将驼峰命名转换为下划线命名
+        underscored: false,  // 将驼峰命名转换为下划线命名
         freezeTableName: true  // 表名与模型名保持一致
     },
     // 日志配置
