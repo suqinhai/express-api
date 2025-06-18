@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { registerConfigModel } = require('../../../models');
 const { validateAdmin } = require('../../../middleware/index');
+const { registerLimiter } = require('../../../middleware');
+const { validate, rules } = require('../../../middleware/validator');
 const { asyncHandler } = require('../../../common');
 const CacheManager = require('../../../common/redis/cache');
 const { PREFIX, TTL } = require('../../../common/redis');
@@ -44,55 +46,80 @@ router.get('/config', asyncHandler(async (req, res) => {
 }));
 
 // 更新注册配置
-router.post('/config', validateAdmin, asyncHandler(async (req, res) => {
-  const {
-    realNameVerification,
-    realNameRequired,
-    phoneVerification,
-    phoneRequired,
-    phoneVerificationCode,
-    captchaType,
-    googleAuthEnabled,
-    googleAppId,
-    googleSecret,
-    facebookAuthEnabled,
-    facebookAppId,
-    facebookSecret
-  } = req.body;
+router.post('/config', 
+  validateAdmin, 
+  asyncHandler(async (req, res) => {
+    const {
+      realNameVerification,
+      realNameRequired,
+      phoneVerification,
+      phoneRequired,
+      phoneVerificationCode,
+      captchaType,
+      googleAuthEnabled,
+      googleAppId,
+      googleSecret,
+      facebookAuthEnabled,
+      facebookAppId,
+      facebookSecret
+    } = req.body;
 
-  let config = await registerConfigModel.findOne();
+    let config = await registerConfigModel.findOne();
 
-  // 如果没有配置记录，创建一个新的
-  if (!config) {
-    config = await registerConfigModel.create({});
-  }
+    // 如果没有配置记录，创建一个新的
+    if (!config) {
+      config = await registerConfigModel.create({});
+    }
 
-  // 更新配置
-  await config.update({
-    realNameVerification,
-    realNameRequired,
-    phoneVerification,
-    phoneRequired,
-    phoneVerificationCode,
-    captchaType,
-    googleAuthEnabled,
-    googleAppId,
-    googleSecret,
-    facebookAuthEnabled,
-    facebookAppId,
-    facebookSecret,
-    updated_at: new Date()
-  });
+    // 更新配置
+    await config.update({
+      realNameVerification,
+      realNameRequired,
+      phoneVerification,
+      phoneRequired,
+      phoneVerificationCode,
+      captchaType,
+      googleAuthEnabled,
+      googleAppId,
+      googleSecret,
+      facebookAuthEnabled,
+      facebookAppId,
+      facebookSecret,
+      updated_at: new Date()
+    });
 
-  // 重新获取更新后的配置
-  config = await registerConfigModel.findOne({
-    where: { id: config.id }
-  });
+    // 重新获取更新后的配置
+    config = await registerConfigModel.findOne({
+      where: { id: config.id }
+    });
 
-  // 更新缓存
-  await CacheManager.set(PREFIX.CONFIG, REGISTER_CONFIG_CACHE_KEY, config, TTL.MEDIUM);
+    // 更新缓存
+    await CacheManager.set(PREFIX.CONFIG, REGISTER_CONFIG_CACHE_KEY, config, TTL.MEDIUM);
 
-  return res.sendSuccess('更新成功', config);
-}));
+    return res.sendSuccess('更新成功', config);
+  }));
+
+/**
+ * 用户注册接口
+ * @route POST /users/register
+ * @param {string} username - 用户名
+ * @param {string} password - 密码
+ * @param {string} email - 邮箱
+ * @returns {object} 200 - 注册成功
+ * @returns {Error} 400 - 参数错误
+ * @returns {Error} 409 - 用户名已存在
+ * @returns {Error} 500 - 服务器错误
+ */
+router.post('/', 
+  registerLimiter,
+  validate([
+    rules.username(),
+    rules.password(),
+    rules.email()
+  ]),
+  asyncHandler(async (req, res) => {
+    // 实际注册逻辑将实现在后续步骤
+    return res.sendSuccess('注册功能待实现');
+  }));
 
 module.exports = router;

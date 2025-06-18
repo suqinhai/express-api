@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const { asyncHandler } = require('../../../common');
 const CacheManager = require('../../../common/redis/cache');
 const { PREFIX, TTL } = require('../../../common/redis');
+const { loginLimiter } = require('../../../middleware');
+const { validate, rules } = require('../../../middleware/validator');
 
 // 引入用户模型
 const { userModel } = require('../../../models');
@@ -78,13 +80,14 @@ async function cacheUserInfo(user) {
  * @returns {Error} 401 - 用户名或密码错误
  * @returns {Error} 500 - 服务器错误
  */
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', 
+  loginLimiter, 
+  validate([
+    rules.username(),
+    rules.password()
+  ]),
+  asyncHandler(async (req, res) => {
   const { username, password } = req.body;
-
-  // 参数验证
-  if (!username || !password) {
-    return res.sendBadRequest('用户名和密码不能为空');
-  }
 
   // 获取数据库连接
   const sequelize = res.sequelize;

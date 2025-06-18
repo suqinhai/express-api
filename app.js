@@ -5,8 +5,10 @@ var cookieParser = require('cookie-parser');
 // var bodyParser = require('body-parser');
 var logger = require('morgan');
 var cors = require('cors');
+var helmet = require('helmet');
 
 var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
+var { globalLimiter } = require('./middleware');
 
 var indexRouter = require('./routes/index');
 var app = express();
@@ -26,6 +28,37 @@ app.use(createMiddleware());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+// 使用 helmet 中间件增强安全性
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // 允许内联脚本
+      styleSrc: ["'self'", "'unsafe-inline'"], // 允许内联样式
+      imgSrc: ["'self'", 'data:'], // 允许数据URL图片
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    }
+  },
+  crossOriginEmbedderPolicy: false, // 如果需要嵌入第三方资源，可能需要禁用此策略
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-site' },
+  // 其他安全头部设置
+  xssFilter: true,
+  noSniff: true,
+  hsts: {
+    maxAge: 15552000, // 180天
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// 应用全局API请求限流
+app.use(globalLimiter);
 
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {
