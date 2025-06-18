@@ -7,6 +7,7 @@ const CacheManager = require('../../../common/redis/cache');
 const { PREFIX, TTL } = require('../../../common/redis');
 const { loginLimiter } = require('../../../middleware');
 const { validate, rules } = require('../../../middleware/validator');
+const { body } = require('express-validator');
 
 // 引入用户模型
 const { userModel } = require('../../../models');
@@ -71,10 +72,41 @@ async function cacheUserInfo(user) {
 }
 
 /**
+ * 登录验证规则
+ */
+const loginValidationRules = [
+  rules.username(),
+  rules.password(),
+  // 防止XSS攻击的额外验证
+  body('username').escape(),
+  
+  // 记住我选项验证
+  body('remember_me')
+    .optional()
+    .isBoolean()
+    .withMessage('记住我选项必须是布尔值'),
+  
+  // 验证码验证（如果前端需要）
+  body('captcha')
+    .optional()
+    .isString()
+    .withMessage('验证码格式不正确'),
+  
+  // 设备信息验证
+  body('device_info')
+    .optional()
+    .isObject()
+    .withMessage('设备信息必须是对象')
+];
+
+/**
  * 用户登录接口
  * @route POST /user/login
  * @param {string} username - 用户名
  * @param {string} password - 密码
+ * @param {boolean} remember_me - 记住我选项（可选）
+ * @param {string} captcha - 验证码（可选）
+ * @param {Object} device_info - 设备信息（可选）
  * @returns {object} 200 - 登录成功，返回token
  * @returns {Error} 400 - 参数错误
  * @returns {Error} 401 - 用户名或密码错误
@@ -82,10 +114,7 @@ async function cacheUserInfo(user) {
  */
 router.post('/', 
   loginLimiter, 
-  validate([
-    rules.username(),
-    rules.password()
-  ]),
+  validate(loginValidationRules),
   asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
