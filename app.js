@@ -7,6 +7,7 @@ var cors = require('cors');
 var helmet = require('helmet');
 var swaggerJsdoc = require('swagger-jsdoc');
 var swaggerUi = require('swagger-ui-express');
+var logger = require('morgan');  // 保留morgan日志器用于开发环境
 var { requestLogger } = require('./common/logger');
 
 var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
@@ -71,7 +72,12 @@ app.use(function (req, res, next) {
   res.sendUnauthorized = (message, options) => sendUnauthorized(res, message, options);
   next();
 });
-app.use(requestLogger()); // 使用自定义请求日志中间件替代morgan
+// 在开发环境保留morgan日志，在生产环境使用Winston日志
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
+  app.use(logger('dev'));
+} else {
+  app.use(requestLogger()); 
+}
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
