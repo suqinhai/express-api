@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var helmet = require('helmet');
+var swaggerJsdoc = require('swagger-jsdoc');
+var swaggerUi = require('swagger-ui-express');
 
 var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
 var { globalLimiter } = require('./middleware');
@@ -75,6 +77,76 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 配置Swagger文档
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: '后台API文档',
+      version: '1.0.0',
+      description: '后台API接口文档，提供系统所有API的详细说明和调试功能',
+      contact: {
+        name: '技术支持',
+        email: 'support@example.com'
+      }
+    },
+    servers: [
+      {
+        url: process.env.API_BASE_URL || 'http://localhost:3001',
+        description: process.env.NODE_ENV === 'production' ? '生产环境' : '开发环境'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      },
+      schemas: {
+        Error: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            message: { type: 'string', example: '操作失败' }
+          }
+        },
+        Success: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: '操作成功' },
+            data: { type: 'object', example: {} }
+          }
+        }
+      }
+    },
+    security: [{ BearerAuth: [] }]
+  },
+  apis: [
+    path.join(__dirname, './routes/**/*.js'),
+    path.join(__dirname, './models/**/*.js')
+  ]
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// 设置Swagger UI路由
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: '后台API文档'
+}));
+
+// 提供Swagger JSON端点
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+console.log('Swagger文档已启用: http://localhost:3001/api-docs');
 
 app.use('/', indexRouter);
 
