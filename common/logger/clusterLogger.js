@@ -1,4 +1,15 @@
 const cluster = require('cluster');
+const winston = require('winston');
+const { format, createLogger, transports } = winston;
+const DailyRotateFile = require('winston-daily-rotate-file');
+const path = require('path');
+const fs = require('fs');
+
+// 确保日志目录存在
+const logDir = path.resolve(process.cwd(), 'logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
 
 /**
  * 集群日志记录类
@@ -10,60 +21,108 @@ class ClusterLogger {
     constructor() {
         this.isMaster = cluster.isMaster;
         this.pid = process.pid;
-    }
-
-    /**
-     * 获取当前时间的格式化字符串
-     * @returns {string} 格式化的时间字符串
-     */
-    getTimeString() {
-        const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+        this.processType = this.isMaster ? '主进程' : '工作进程';
+        
+        // 创建自定义日志格式
+        const customFormat = format.combine(
+            format.timestamp({
+                format: 'YYYY-MM-DD HH:mm:ss.SSS'
+            }),
+            format.printf(info => {
+                const { timestamp, level, message, ...rest } = info;
+                let logMessage = `[${timestamp}] [${this.processType} ${this.pid}] [${level.toUpperCase()}] ${message}`;
+                
+                if (Object.keys(rest).length > 0 && rest.data) {
+                    try {
+                        const dataString = typeof rest.data === 'string' 
+                            ? rest.data 
+                            : JSON.stringify(rest.data, null, 2);
+                        logMessage += `\n${dataString}`;
+                    } catch (error) {
+                        logMessage += '\n[无法序列化的数据]';
+                    }
+                }
+                
+                return logMessage;
+            })
+        );
+        
+        // 创建Winston日志记录器实例
+        this.logger = createLogger({
+            format: customFormat,
+            transports: [
+                new transports.Console({
+                    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+                }),
+                new DailyRotateFile({
+                    filename: path.join(logDir, '%DATE%-cluster.log'),
+                    datePattern: 'YYYY-MM-DD',
+                    level: 'info',
+                    maxSize: '20m',
+                    maxFiles: '14d',
+                    format: format.combine(
+                        format.uncolorize()
+                    )
+                }),
+                new DailyRotateFile({
+                    filename: path.join(logDir, '%DATE%-cluster-error.log'),
+                    datePattern: 'YYYY-MM-DD',
+                    level: 'error',
+                    maxSize: '20m',
+                    maxFiles: '30d',
+                    format: format.combine(
+                        format.uncolorize()
+                    )
+                })
+            ],
+            exitOnError: false
+        });
     }
 
     /**
      * 记录普通消息
      * @param {string} message - 要记录的消息
+     * @param {Object} [data] - 附加数据
      */
-    log(message) {
-        const timeString = this.getTimeString();
-        const processType = this.isMaster ? '主进程' : '工作进程';
-        console.log(`[${timeString}] [${processType} ${this.pid}] ${message}`);
+    log(message, data = null) {
+        this.logger.info(message, data ? { data } : undefined);
     }
 
     /**
      * 记录信息消息
      * @param {string} message - 要记录的消息
+     * @param {Object} [data] - 附加数据
      */
-    info(message) {
-        const timeString = this.getTimeString();
-        const processType = this.isMaster ? '主进程' : '工作进程';
-        console.info(`[${timeString}] [${processType} ${this.pid}] [INFO] ${message}`);
+    info(message, data = null) {
+        this.logger.info(message, data ? { data } : undefined);
     }
 
     /**
      * 记录警告消息
      * @param {string} message - 要记录的消息
+     * @param {Object} [data] - 附加数据
      */
-    warn(message) {
-        const timeString = this.getTimeString();
-        const processType = this.isMaster ? '主进程' : '工作进程';
-        console.warn(`[${timeString}] [${processType} ${this.pid}] [WARN] ${message}`);
+    warn(message, data = null) {
+        this.logger.warn(message, data ? { data } : undefined);
     }
 
     /**
      * 记录错误消息
      * @param {string} message - 要记录的消息
-     * @param {Error} [error] - 相关的错误对象
+     * @param {Error|Object} [error] - 相关的错误对象或附加数据
      */
     error(message, error = null) {
-        const timeString = this.getTimeString();
-        const processType = this.isMaster ? '主进程' : '工作进程';
-        
-        if (error) {
-            console.error(`[${timeString}] [${processType} ${this.pid}] [ERROR] ${message}`, error);
+        if (error instanceof Error) {
+            this.logger.error(message, { 
+                error: {
+                    message: error.message,
+                    stack: error.stack
+                }
+            });
+        } else if (error) {
+            this.logger.error(message, { data: error });
         } else {
-            console.error(`[${timeString}] [${processType} ${this.pid}] [ERROR] ${message}`);
+            this.logger.error(message);
         }
     }
     
@@ -74,13 +133,35 @@ class ClusterLogger {
      * @param {Object} [data] - 附加数据
      */
     clusterEvent(eventType, message, data = null) {
-        const timeString = this.getTimeString();
-        const processType = this.isMaster ? '主进程' : '工作进程';
-        
-        if (data) {
-            console.log(`[${timeString}] [${processType} ${this.pid}] [CLUSTER:${eventType}] ${message}`, data);
+        const formattedMessage = `[CLUSTER:${eventType}] ${message}`;
+        this.logger.info(formattedMessage, data ? { data } : undefined);
+    }
+    
+    /**
+     * 记录调试信息（仅在开发环境显示）
+     * @param {string} message - 要记录的消息 
+     * @param {Object} [data] - 附加数据
+     */
+    debug(message, data = null) {
+        this.logger.debug(message, data ? { data } : undefined);
+    }
+    
+    /**
+     * 记录严重错误（可能导致应用崩溃的错误）
+     * @param {string} message - 要记录的消息
+     * @param {Error} [error] - 错误对象
+     */
+    fatal(message, error = null) {
+        const formattedMessage = `[FATAL] ${message}`;
+        if (error instanceof Error) {
+            this.logger.error(formattedMessage, { 
+                error: {
+                    message: error.message,
+                    stack: error.stack
+                }
+            });
         } else {
-            console.log(`[${timeString}] [${processType} ${this.pid}] [CLUSTER:${eventType}] ${message}`);
+            this.logger.error(formattedMessage);
         }
     }
 }

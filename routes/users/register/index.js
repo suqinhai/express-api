@@ -204,6 +204,108 @@ router.post('/config',
   }));
 
 /**
+ * @swagger
+ * /users/register:
+ *   post:
+ *     summary: 用户注册
+ *     description: 创建新用户账号
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - confirmPassword
+ *               - email
+ *               - agreement
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: 用户名(4-20个字符)
+ *                 example: "newuser"
+ *               password:
+ *                 type: string
+ *                 description: 密码(6-20个字符，包含大小写字母和数字)
+ *                 format: password
+ *                 example: "Password123"
+ *               confirmPassword:
+ *                 type: string
+ *                 description: 确认密码(必须与密码一致)
+ *                 format: password
+ *                 example: "Password123"
+ *               email:
+ *                 type: string
+ *                 description: 电子邮箱地址
+ *                 format: email
+ *                 example: "user@example.com"
+ *               agreement:
+ *                 type: boolean
+ *                 description: 是否同意用户协议(必须为true)
+ *                 example: true
+ *               captcha:
+ *                 type: string
+ *                 description: 验证码(如果启用)
+ *                 example: "a1b2c3"
+ *               phone:
+ *                 type: string
+ *                 description: 手机号码
+ *                 example: "+8612345678901"
+ *               inviteCode:
+ *                 type: string
+ *                 description: 邀请码(如需)
+ *                 example: "INV123456"
+ *     responses:
+ *       200:
+ *         description: 注册成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "注册成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user_id:
+ *                       type: integer
+ *                       description: 用户ID
+ *                       example: 42
+ *       400:
+ *         description: 参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: 用户名已存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: 注册请求过于频繁
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: 服务器错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
  * 用户注册接口
  * @route POST /users/register
  * @param {string} username - 用户名

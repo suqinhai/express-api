@@ -3,11 +3,11 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 // var bodyParser = require('body-parser');
-var logger = require('morgan');
 var cors = require('cors');
 var helmet = require('helmet');
 var swaggerJsdoc = require('swagger-jsdoc');
 var swaggerUi = require('swagger-ui-express');
+var { requestLogger } = require('./common/logger');
 
 var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
 var { globalLimiter } = require('./middleware');
@@ -71,7 +71,7 @@ app.use(function (req, res, next) {
   res.sendUnauthorized = (message, options) => sendUnauthorized(res, message, options);
   next();
 });
-app.use(logger('dev'));
+app.use(requestLogger()); // 使用自定义请求日志中间件替代morgan
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -110,7 +110,20 @@ const swaggerOptions = {
           type: 'object',
           properties: {
             success: { type: 'boolean', example: false },
-            message: { type: 'string', example: '操作失败' }
+            message: { type: 'string', example: '操作失败' },
+            errors: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  field: { type: 'string', example: 'username' },
+                  message: { type: 'string', example: '用户名必须介于4-20个字符之间' }
+                }
+              },
+              example: [
+                { field: 'username', message: '用户名必须介于4-20个字符之间' }
+              ]
+            }
           }
         },
         Success: {
@@ -119,6 +132,45 @@ const swaggerOptions = {
             success: { type: 'boolean', example: true },
             message: { type: 'string', example: '操作成功' },
             data: { type: 'object', example: {} }
+          }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: { 
+              type: 'integer', 
+              description: '用户ID',
+              example: 1 
+            },
+            username: { 
+              type: 'string', 
+              description: '用户名',
+              example: 'admin' 
+            },
+            email: { 
+              type: 'string', 
+              format: 'email',
+              description: '邮箱地址',
+              example: 'admin@example.com' 
+            },
+            status: { 
+              type: 'string', 
+              description: '用户状态',
+              enum: ['active', 'inactive', 'locked', 'pending'],
+              example: 'active' 
+            },
+            created_at: { 
+              type: 'string', 
+              format: 'date-time',
+              description: '创建时间',
+              example: '2023-01-01T00:00:00Z' 
+            },
+            last_login: { 
+              type: 'string', 
+              format: 'date-time',
+              description: '最后登录时间',
+              example: '2023-01-01T12:30:00Z' 
+            }
           }
         }
       }

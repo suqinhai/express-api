@@ -100,6 +100,119 @@ const loginValidationRules = [
 ];
 
 /**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: 用户认证相关接口
+ * 
+ * /users/login:
+ *   post:
+ *     summary: 用户登录
+ *     description: 用户使用用户名和密码登录系统
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: 用户名
+ *                 example: admin
+ *               password:
+ *                 type: string
+ *                 description: 用户密码
+ *                 format: password
+ *                 example: "Password123"
+ *               remember_me:
+ *                 type: boolean
+ *                 description: 记住我选项
+ *                 example: false
+ *               captcha:
+ *                 type: string
+ *                 description: 验证码(如需)
+ *                 example: "a1b2c3"
+ *               device_info:
+ *                 type: object
+ *                 description: 设备信息
+ *                 example: { "device": "web", "browser": "chrome" }
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "登录成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT令牌
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: 用户ID
+ *                           example: 1
+ *                         username:
+ *                           type: string
+ *                           description: 用户名
+ *                           example: "admin"
+ *                         email:
+ *                           type: string
+ *                           description: 邮箱地址
+ *                           example: "admin@example.com"
+ *                         status:
+ *                           type: string
+ *                           description: 用户状态
+ *                           example: "active"
+ *                         last_login:
+ *                           type: string
+ *                           format: date-time
+ *                           description: 上次登录时间
+ *                           example: "2023-01-01T00:00:00Z"
+ *       400:
+ *         description: 参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: 用户名或密码错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: 请求次数过多，需要稍后重试
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: 服务器错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
  * 用户登录接口
  * @route POST /user/login
  * @param {string} username - 用户名
