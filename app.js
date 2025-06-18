@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 // var bodyParser = require('body-parser');
 var cors = require('cors');
 var helmet = require('helmet');
+var compression = require('compression');
 var swaggerJsdoc = require('swagger-jsdoc');
 var swaggerUi = require('swagger-ui-express');
 var morganLogger = require('morgan');  // 重命名morgan日志器，避免冲突
@@ -60,6 +61,18 @@ app.use(helmet({
   }
 }));
 
+// 使用压缩中间件减小响应体积，提高传输速度
+app.use(compression({
+  level: 6,                    // 压缩级别，范围1-9，数字越大压缩越好，但CPU使用越多，默认是6
+  threshold: 1024,             // 只压缩大于1KB的响应
+  filter: (req, res) => {      // 筛选需要压缩的响应
+    if (req.headers['x-no-compression']) {
+      return false;            // 不压缩带有特定头部的请求
+    }
+    return compression.filter(req, res); // 使用默认过滤器
+  }
+}));
+
 // 应用全局API请求限流
 app.use(globalLimiter);
 
@@ -82,7 +95,30 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// 配置静态资源缓存和静态文件服务
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,                // 启用ETag头
+  lastModified: true,        // 启用Last-Modified头
+  setHeaders: (res, path) => {
+    // 根据文件类型设置不同的缓存策略
+    if (path.endsWith('.html')) {
+      // HTML文件设置较短的缓存时间
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5分钟
+    } else if (path.match(/\.(css|js)$/)) {
+      // CSS和JS文件设置较长的缓存时间，添加版本号来实现更新
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1天
+    } else if (path.match(/\.(jpg|jpeg|png|gif|ico|svg|webp)$/)) {
+      // 图片文件设置更长的缓存时间
+      res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30天
+    } else if (path.match(/\.(woff|woff2|ttf|eot|otf)$/)) {
+      // 字体文件设置很长的缓存时间
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年
+    } else {
+      // 其他静态资源设置默认缓存时间
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // 1小时
+    }
+  }
+}));
 
 // 配置Swagger文档
 const swaggerOptions = {
