@@ -310,6 +310,74 @@ class CacheManager {
       }
     }
   }
+
+  /**
+   * 按模式清除缓存
+   * @param {string} type - 缓存类型前缀
+   * @param {string|RegExp} pattern - 匹配模式，可以是字符串或正则表达式
+   * @returns {Promise<Array<string>>} 已删除的键数组
+   */
+  static async clearByPattern(type, pattern) {
+    const startTime = Date.now();
+    let keys = [];
+
+    try {
+      // 获取所有以type开头的键
+      const allKeys = await redis.keys(`${type}*`);
+      
+      // 没有键时直接返回
+      if (allKeys.length === 0) {
+        const duration = Date.now() - startTime;
+        logger.logCachePerformance('CLEAR_PATTERN', duration, `${type}:${pattern}`);
+        return [];
+      }
+
+      // 根据模式过滤键
+      if (pattern instanceof RegExp) {
+        // 使用正则表达式过滤
+        keys = allKeys.filter(key => pattern.test(key));
+      } else if (typeof pattern === 'string') {
+        // 使用字符串包含过滤
+        keys = allKeys.filter(key => key.includes(pattern));
+      } else {
+        // 如果模式不是字符串也不是正则表达式，使用所有键
+        keys = allKeys;
+      }
+
+      // 如果没有匹配的键，直接返回
+      if (keys.length === 0) {
+        const duration = Date.now() - startTime;
+        logger.logCachePerformance('CLEAR_PATTERN', duration, `${type}:${pattern}`);
+        return [];
+      }
+
+      // 删除匹配的键
+      await redis.del(keys);
+
+      // 记录缓存清除日志
+      const duration = Date.now() - startTime;
+      logger.log(
+        logger.LOG_LEVELS.INFO, 
+        LOG_CATEGORIES.CACHE, 
+        `按模式清除缓存: ${type}:${pattern}, 删除了 ${keys.length} 个键`,
+        { matchedKeys: keys.length, totalKeys: allKeys.length }
+      );
+      logger.logCachePerformance('CLEAR_PATTERN', duration, `${type}:${pattern}`);
+
+      return keys;
+    } catch (error) {
+      // 记录缓存错误日志
+      const duration = Date.now() - startTime;
+      logger.logError(
+        LOG_CATEGORIES.CACHE, 
+        `按模式清除缓存错误: ${type}:${pattern}`, 
+        error
+      );
+      logger.logCachePerformance('CLEAR_PATTERN', duration, `${type}:${pattern}`);
+
+      return [];
+    }
+  }
 }
 
 module.exports = CacheManager; 

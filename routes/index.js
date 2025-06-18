@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var healthCheck = require('../common/healthcheck');
+var { cache } = require('../middleware');
 
 /**
  * @swagger
@@ -11,6 +12,8 @@ var healthCheck = require('../common/healthcheck');
  *     description: 用户认证相关接口
  *   - name: Users
  *     description: 用户管理相关接口
+ *   - name: Cache
+ *     description: 缓存演示接口
  */
 
 /**
@@ -119,6 +122,93 @@ router.get('/health', async function(req, res) {
       error: error.message
     });
   }
+});
+
+/**
+ * @swagger
+ * /cache-demo:
+ *   get:
+ *     summary: 缓存演示接口
+ *     description: 演示响应缓存功能，首次请求会延迟2秒，后续请求会直接从缓存返回
+ *     tags: [Cache]
+ *     parameters:
+ *       - in: query
+ *         name: nocache
+ *         schema:
+ *           type: boolean
+ *         description: 设置为true跳过缓存（默认false）
+ *     responses:
+ *       200:
+ *         description: 成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 缓存演示数据
+ *                 timestamp:
+ *                   type: string
+ *                   description: 时间戳
+ *                   example: "2023-01-01T12:00:00Z"
+ *                 cached:
+ *                   type: boolean
+ *                   description: 是否来自缓存
+ *                   example: true
+ */
+router.get('/cache-demo', cache.routeCache({
+  ttl: 60, // 缓存60秒
+  prefix: 'api:demo'
+}), function(req, res) {
+  // 如果请求参数包含nocache=true，则跳过缓存
+  if (req.query.nocache === 'true') {
+    res.set('X-Cache', 'BYPASS');
+  }
+  
+  // 模拟耗时操作（2秒延迟）
+  setTimeout(() => {
+    const now = new Date();
+    
+    res.json({
+      message: '缓存演示数据',
+      timestamp: now.toISOString(),
+      cached: res.get('X-Cache') === 'HIT',
+      serverTime: now.toLocaleTimeString()
+    });
+  }, 2000);
+});
+
+/**
+ * @swagger
+ * /cache-demo/clear:
+ *   post:
+ *     summary: 清除缓存演示
+ *     description: 清除缓存演示接口的缓存数据
+ *     tags: [Cache]
+ *     responses:
+ *       200:
+ *         description: 成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 缓存已清除
+ */
+router.post('/cache-demo/clear', cache.clearRouteCache({
+  prefix: 'api:demo'
+}), function(req, res) {
+  res.json({
+    success: true,
+    message: '缓存已清除',
+    timestamp: new Date().toISOString()
+  });
 });
 
 var userRouter = require('./users');
