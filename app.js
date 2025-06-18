@@ -135,7 +135,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.API_BASE_URL || 'http://localhost:3001',
+        url: process.env.API_BASE_URL || 'http://localhost:3000',
         description: process.env.NODE_ENV === 'production' ? '生产环境' : '开发环境'
       }
     ],
@@ -240,7 +240,7 @@ app.get('/api-docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-console.log('Swagger文档已启用: http://localhost:3001/api-docs');
+console.log('Swagger文档已启用: http://localhost:3000/api-docs');
 
 app.use('/', indexRouter);
 

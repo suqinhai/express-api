@@ -134,7 +134,7 @@ build-dev: ## 构建开发Docker镜像
 # 健康检查
 .PHONY: health
 health: ## 检查应用健康状态
-	curl -f http://localhost:3001/health || echo "应用未运行或健康检查失败"
+	curl -f http://localhost:3000/health || echo "应用未运行或健康检查失败"
 
 # 日志
 .PHONY: logs-tail
@@ -167,7 +167,7 @@ audit-fix: ## 自动修复安全问题
 .PHONY: perf-test
 perf-test: ## 运行性能测试 (需要安装artillery)
 	@if command -v artillery >/dev/null 2>&1; then \
-		artillery quick --count 10 --num 100 http://localhost:3001/health; \
+		artillery quick --count 10 --num 100 http://localhost:3000/health; \
 	else \
 		echo "请先安装artillery: npm install -g artillery"; \
 	fi

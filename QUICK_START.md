@@ -45,10 +45,10 @@ docker-compose -f docker-compose.dev.yml up --build
 ### 4. 验证服务
 ```bash
 # 健康检查
-curl http://localhost:3001/health
+curl http://localhost:3000/health
 
 # API文档
-open http://localhost:3001/api-docs
+open http://localhost:3000/api-docs
 ```
 
 ## 🧪 运行测试
@@ -111,10 +111,10 @@ make prod-stop
 ### 查看性能统计
 ```bash
 # 访问性能监控端点（需要在路由中添加）
-curl http://localhost:3001/metrics
+curl http://localhost:3000/metrics
 
 # 查看健康检查详情
-curl http://localhost:3001/health
+curl http://localhost:3000/health
 ```
 
 ### 监控系统资源
@@ -195,7 +195,7 @@ npm run db:sync
 
 - [完整优化建议](OPTIMIZATION_RECOMMENDATIONS.md)
 - [故障排除指南](TROUBLESHOOTING.md)
-- [API文档](http://localhost:3001/api-docs)
+- [API文档](http://localhost:3000/api-docs)
 - [项目规则](RULES.md)
 
 ## 📞 获取帮助
