@@ -212,7 +212,9 @@ router.post('/cache-demo/clear', cache.clearRouteCache({
 });
 
 var userRouter = require('./users');
+var paymentRouter = require('./payment');
 
 router.use('/users', userRouter);
+router.use('/payment', paymentRouter);
 
 module.exports = router;
