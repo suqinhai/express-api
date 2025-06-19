@@ -4,8 +4,8 @@
  */
 const os = require('os');
 const { logger } = require('./logger');
-const { sequelize } = require('./mysql');
-const { redisClient } = require('./redis');
+const sequelize = require('./mysql');
+const { redis: redisClient } = require('./redis');
 
 /**
  * 健康检查类
@@ -56,6 +56,18 @@ class HealthCheck {
    */
   async checkDatabase() {
     try {
+      // 检查sequelize实例是否存在
+      if (!sequelize) {
+        return {
+          status: 'error',
+          error: 'Sequelize实例未初始化',
+          details: {
+            dialect: 'unknown',
+            connection: 'inactive'
+          }
+        };
+      }
+
       // 尝试进行简单查询验证连接
       const startTime = Date.now();
       await sequelize.authenticate();
@@ -98,6 +110,18 @@ class HealthCheck {
         };
       }
 
+      // 检查Redis连接状态
+      if (redisClient.status !== 'ready' && redisClient.status !== 'connecting') {
+        return {
+          status: 'error',
+          error: `Redis连接状态异常: ${redisClient.status}`,
+          details: {
+            connection: 'inactive',
+            status: redisClient.status
+          }
+        };
+      }
+
       // 检查Redis连接
       const startTime = Date.now();
       await redisClient.ping();
@@ -107,7 +131,8 @@ class HealthCheck {
         status: 'ok',
         responseTime: `${responseTime}ms`,
         details: {
-          connection: 'active'
+          connection: 'active',
+          status: redisClient.status
         }
       };
     } catch (error) {
@@ -116,7 +141,8 @@ class HealthCheck {
         status: 'error',
         error: error.message,
         details: {
-          connection: 'inactive'
+          connection: 'inactive',
+          status: redisClient?.status || 'unknown'
         }
       };
     }
