@@ -16,7 +16,7 @@ const config = {
     port: parseInt(process.env.DB_PORT) || 3306,
     username: process.env.DB_USERNAME || process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || process.env.DB_PASS || '123456',
-    database: process.env.DB_DATABASE || process.env.DB_NAME || 'testSxx',
+    database: process.env.DB_DATABASE || process.env.DB_NAME || 'admin-game',
     // 连接池配置 - 根据实际负载调整
     pool: {
         max: parseInt(process.env.DB_POOL_MAX) || 20,     // 最大连接数 - 增加以支持更高并发
