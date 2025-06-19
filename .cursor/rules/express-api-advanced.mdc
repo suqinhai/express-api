@@ -302,6 +302,7 @@ process.on('SIGTERM', async () => {
 4. 考虑安全性和性能
 5. 包含必要的验证逻辑
 6. 不需要测试用例代码
+7. 生成的.py文件你都放在C:\Users\46745\Desktop\project\pyFiles,需要生成.py文件你也在这目录找
 
 ### 重构建议
 1. 识别代码重复并提取公共函数
