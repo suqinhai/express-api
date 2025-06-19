@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "db:sync": "node scripts/sync-db.js",
     "payment:sync": "node scripts/sync-payment-db.js",
+    "activity:sync": "node scripts/sync-activity-db.js",
     "dev": "npm run start",
     "build": "echo 'No build step required for Node.js'",
     "health": "node common/healthcheck.js"

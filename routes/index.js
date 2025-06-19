@@ -14,6 +14,10 @@ var { cache } = require('../middleware');
  *     description: 用户管理相关接口
  *   - name: Cache
  *     description: 缓存演示接口
+ *   - name: Activities
+ *     description: 活动管理相关接口
+ *   - name: Activities Admin
+ *     description: 活动管理员接口
  */
 
 /**
@@ -213,8 +217,12 @@ router.post('/cache-demo/clear', cache.clearRouteCache({
 
 var userRouter = require('./users');
 var paymentRouter = require('./payment');
+var activitiesRouter = require('./activities');
+var activitiesAdminRouter = require('./activities/admin');
 
 router.use('/users', userRouter);
 router.use('/payment', paymentRouter);
+router.use('/activities', activitiesRouter);
+router.use('/activities/admin', activitiesAdminRouter);
 
 module.exports = router;
