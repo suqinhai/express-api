@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { userApiMiddleware } = require('../../../middleware/userApi');
+const { UserAuthController } = require('../../../controllers');
+
+// 创建控制器实例
+const userAuthController = new UserAuthController();
 
 /**
  * @swagger
@@ -90,16 +94,7 @@ const { userApiMiddleware } = require('../../../middleware/userApi');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', function(req, res) {
-  // TODO: 实现用户登录逻辑
-  res.sendSuccess('用户端登录接口', {
-    data: {
-      message: '此接口待实现',
-      type: 'user-login',
-      endpoint: '/api/user/auth/login'
-    }
-  });
-});
+router.post('/login', userAuthController.login);
 
 /**
  * @swagger
@@ -124,17 +119,7 @@ router.post('/login', function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', userApiMiddleware.authenticated, function(req, res) {
-  // TODO: 实现用户登出逻辑
-  res.sendSuccess('用户端登出接口', {
-    data: {
-      message: '此接口待实现',
-      type: 'user-logout',
-      endpoint: '/api/user/auth/logout',
-      user: req.user ? { id: req.user.id, username: req.user.username } : null
-    }
-  });
-});
+router.post('/logout', userApiMiddleware.authenticated, userAuthController.logout);
 
 /**
  * @swagger
@@ -172,16 +157,18 @@ router.post('/logout', userApiMiddleware.authenticated, function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/refresh', userApiMiddleware.authenticated, function(req, res) {
-  // TODO: 实现令牌刷新逻辑
-  res.sendSuccess('用户端令牌刷新接口', {
-    data: {
-      message: '此接口待实现',
-      type: 'user-token-refresh',
-      endpoint: '/api/user/auth/refresh',
-      user: req.user ? { id: req.user.id, username: req.user.username } : null
-    }
-  });
-});
+router.post('/refresh', userAuthController.refreshToken);
+
+// 添加注册路由
+router.post('/register', userAuthController.register);
+
+// 添加获取当前用户信息路由
+router.get('/me', userApiMiddleware.authenticated, userAuthController.getCurrentUser);
+
+// 添加修改密码路由
+router.put('/password', userApiMiddleware.authenticated, userAuthController.changePassword);
+
+// 添加验证令牌路由
+router.get('/verify', userAuthController.verifyToken);
 
 module.exports = router;

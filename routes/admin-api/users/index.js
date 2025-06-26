@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { adminApiMiddleware } = require('../../../middleware/adminApi');
+const { AdminUserController } = require('../../../controllers');
+
+// 创建控制器实例
+const adminUserController = new AdminUserController();
 
 /**
  * @swagger
@@ -102,70 +106,32 @@ const { adminApiMiddleware } = require('../../../middleware/adminApi');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', adminApiMiddleware.withPermissions(['user:read']), async function(req, res) {
-  try {
-    const { page = 1, limit = 20, status, search } = req.query;
-    
-    // 示例实现：获取用户列表
-    // 这里应该从数据库查询，现在返回模拟数据
-    const mockUsers = [
-      {
-        id: 1,
-        username: 'user1',
-        email: 'user1@example.com',
-        nickname: '用户1',
-        status: 'active',
-        created_at: '2023-01-01T00:00:00Z',
-        last_login: '2023-12-01T12:00:00Z'
-      },
-      {
-        id: 2,
-        username: 'user2',
-        email: 'user2@example.com',
-        nickname: '用户2',
-        status: 'inactive',
-        created_at: '2023-02-01T00:00:00Z',
-        last_login: '2023-11-01T12:00:00Z'
-      }
-    ];
-    
-    // 应用筛选条件
-    let filteredUsers = mockUsers;
-    if (status) {
-      filteredUsers = filteredUsers.filter(user => user.status === status);
-    }
-    if (search) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.username.includes(search) || user.email.includes(search)
-      );
-    }
-    
-    // 分页处理
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-    
-    res.sendSuccess('获取用户列表成功', {
-      data: {
-        users: paginatedUsers,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: filteredUsers.length,
-          totalPages: Math.ceil(filteredUsers.length / limit)
-        },
-        admin: req.user ? { id: req.user.id, username: req.user.username } : null
-      }
-    });
-  } catch (error) {
-    console.error('获取用户列表失败:', error);
-    res.status(500).json({
-      success: false,
-      message: '获取用户列表失败',
-      error: process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误'
-    });
-  }
-});
+// 用户列表
+router.get('/', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserList);
+
+// 用户详情
+router.get('/:id', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserDetail);
+
+// 创建用户
+router.post('/', adminApiMiddleware.withPermissions(['user:create']), adminUserController.createUser);
+
+// 更新用户信息
+router.put('/:id', adminApiMiddleware.withPermissions(['user:write']), adminUserController.updateUser);
+
+// 更新用户状态
+router.patch('/:id/status', adminApiMiddleware.sensitiveOperation('user-status-change', ['user:write']), adminUserController.updateUserStatus);
+
+// 重置用户密码
+router.post('/:id/reset-password', adminApiMiddleware.sensitiveOperation('password-reset', ['user:write']), adminUserController.resetUserPassword);
+
+// 删除用户
+router.delete('/:id', adminApiMiddleware.sensitiveOperation('user-delete', ['user:delete']), adminUserController.deleteUser);
+
+// 批量更新用户状态
+router.patch('/batch/status', adminApiMiddleware.withPermissions(['user:write']), adminUserController.batchUpdateUserStatus);
+
+// 用户统计信息
+router.get('/statistics', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserStatistics);
 
 /**
  * @swagger

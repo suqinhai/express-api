@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { userApiMiddleware } = require('../../../middleware/userApi');
+const { UserProfileController } = require('../../../controllers');
+
+// 创建控制器实例
+const userProfileController = new UserProfileController();
 
 /**
  * @swagger
@@ -82,36 +86,7 @@ const { userApiMiddleware } = require('../../../middleware/userApi');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', userApiMiddleware.authenticated, async function(req, res) {
-  try {
-    // 示例实现：获取用户个人资料
-    const user = req.user;
-    
-    // 构建返回的用户资料数据（过滤敏感信息）
-    const userProfile = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      nickname: user.nickname || user.username,
-      avatar: user.avatar || null,
-      phone: user.phone || null,
-      status: user.status,
-      created_at: user.created_at || user.createdAt,
-      last_login: user.last_login || user.lastLogin || user.updatedAt
-    };
-    
-    res.sendSuccess('获取个人资料成功', {
-      data: userProfile
-    });
-  } catch (error) {
-    console.error('获取用户资料失败:', error);
-    res.status(500).json({
-      success: false,
-      message: '获取个人资料失败',
-      error: process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误'
-    });
-  }
-});
+router.get('/', userApiMiddleware.authenticated, userProfileController.getProfile);
 
 /**
  * @swagger
@@ -170,18 +145,7 @@ router.get('/', userApiMiddleware.authenticated, async function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/', userApiMiddleware.authenticated, function(req, res) {
-  // TODO: 实现更新用户个人资料逻辑
-  res.sendSuccess('个人资料更新成功', {
-    data: {
-      message: '此接口待实现',
-      type: 'user-profile-update',
-      endpoint: '/api/user/profile',
-      user: req.user ? { id: req.user.id, username: req.user.username } : null,
-      updateData: req.body
-    }
-  });
-});
+router.put('/', userApiMiddleware.authenticated, userProfileController.updateProfile);
 
 /**
  * @swagger
@@ -234,16 +198,11 @@ router.put('/', userApiMiddleware.authenticated, function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/password', userApiMiddleware.authenticated, function(req, res) {
-  // TODO: 实现修改密码逻辑
-  res.sendSuccess('密码修改成功', {
-    data: {
-      message: '此接口待实现',
-      type: 'user-password-change',
-      endpoint: '/api/user/profile/password',
-      user: req.user ? { id: req.user.id, username: req.user.username } : null
-    }
-  });
-});
+// 添加更多路由
+router.post('/avatar', userApiMiddleware.authenticated, userProfileController.uploadAvatar);
+router.get('/stats', userApiMiddleware.authenticated, userProfileController.getStats);
+router.get('/completeness', userApiMiddleware.authenticated, userProfileController.getProfileCompleteness);
+router.get('/check-username/:username', userProfileController.checkUsername);
+router.get('/:userId', userProfileController.getUserBasicInfo);
 
 module.exports = router;

@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { adminApiMiddleware } = require('../../../middleware/adminApi');
+const { AdminSystemController } = require('../../../controllers');
+
+// 创建控制器实例
+const adminSystemController = new AdminSystemController();
 
 /**
  * @swagger
@@ -64,29 +68,7 @@ const { adminApiMiddleware } = require('../../../middleware/adminApi');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/info', adminApiMiddleware.withPermissions(['system:read']), function(req, res) {
-  // TODO: 实现获取系统信息逻辑
-  const memoryUsage = process.memoryUsage();
-  
-  res.sendSuccess('获取系统信息成功', {
-    data: {
-      message: '此接口待实现',
-      type: 'admin-system-info',
-      endpoint: '/api/admin/system/info',
-      admin: req.user ? { id: req.user.id, username: req.user.username } : null,
-      systemInfo: {
-        version: '1.0.0',
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV,
-        nodeVersion: process.version,
-        memory: {
-          used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-          total: Math.round(memoryUsage.heapTotal / 1024 / 1024)
-        }
-      }
-    }
-  });
-});
+router.get('/info', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemInfo);
 
 /**
  * @swagger
@@ -139,29 +121,7 @@ router.get('/info', adminApiMiddleware.withPermissions(['system:read']), functio
  *                           type: number
  *                           example: 150.5
  */
-router.get('/stats', adminApiMiddleware.withPermissions(['system:read']), function(req, res) {
-  // TODO: 实现获取系统统计信息逻辑
-  res.sendSuccess('获取统计信息成功', {
-    data: {
-      message: '此接口待实现',
-      type: 'admin-system-stats',
-      endpoint: '/api/admin/system/stats',
-      admin: req.user ? { id: req.user.id, username: req.user.username } : null,
-      stats: {
-        users: {
-          total: 0,
-          active: 0,
-          newToday: 0
-        },
-        requests: {
-          total: 0,
-          today: 0,
-          avgResponseTime: 0
-        }
-      }
-    }
-  });
-});
+router.get('/statistics', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemStatistics);
 
 /**
  * @swagger
@@ -219,21 +179,7 @@ router.get('/stats', adminApiMiddleware.withPermissions(['system:read']), functi
  *                           meta:
  *                             type: object
  */
-router.get('/logs', adminApiMiddleware.withPermissions(['system:read']), function(req, res) {
-  // TODO: 实现获取系统日志逻辑
-  const { level, limit = 100 } = req.query;
-  
-  res.sendSuccess('获取系统日志成功', {
-    data: {
-      message: '此接口待实现',
-      type: 'admin-system-logs',
-      endpoint: '/api/admin/system/logs',
-      admin: req.user ? { id: req.user.id, username: req.user.username } : null,
-      queryParams: { level, limit },
-      logs: []
-    }
-  });
-});
+router.get('/logs', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemLogs);
 
 /**
  * @swagger
@@ -264,22 +210,15 @@ router.get('/logs', adminApiMiddleware.withPermissions(['system:read']), functio
  *             schema:
  *               $ref: '#/components/schemas/Success'
  */
-router.post('/cache/clear', 
-  adminApiMiddleware.sensitiveOperation('cache-clear', ['system:write']), 
-  function(req, res) {
-    // TODO: 实现清除缓存逻辑
-    const { cacheType = 'all' } = req.body;
-    
-    res.sendSuccess('系统缓存清除成功', {
-      data: {
-        message: '此接口待实现',
-        type: 'admin-cache-clear',
-        endpoint: '/api/admin/system/cache/clear',
-        admin: req.user ? { id: req.user.id, username: req.user.username } : null,
-        cacheType: cacheType
-      }
-    });
-  }
-);
+router.post('/cache/clear', adminApiMiddleware.sensitiveOperation('cache-clear', ['system:write']), adminSystemController.clearSystemCache);
+
+// 添加更多路由
+router.get('/health', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getHealthStatus);
+router.get('/config', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemConfig);
+router.put('/config', adminApiMiddleware.sensitiveOperation('config-update', ['system:write']), adminSystemController.updateSystemConfig);
+router.post('/restart', adminApiMiddleware.sensitiveOperation('system-restart', ['system:admin']), adminSystemController.restartApplication);
+router.get('/api-stats', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getApiStatistics);
+router.post('/export', adminApiMiddleware.sensitiveOperation('data-export', ['system:admin']), adminSystemController.exportSystemData);
+router.get('/performance', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getPerformanceMetrics);
 
 module.exports = router;
