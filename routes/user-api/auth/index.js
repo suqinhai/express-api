@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { userApiMiddleware } = require('../../../middleware/userApi');
+const { stacks } = require('../../../middleware');
 const { UserAuthController } = require('../../../controllers');
 
 // 创建控制器实例
@@ -119,7 +119,7 @@ router.post('/login', userAuthController.login);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', userApiMiddleware.authenticated, userAuthController.logout);
+router.post('/logout', stacks.user.authenticated, userAuthController.logout);
 
 /**
  * @swagger
@@ -163,10 +163,10 @@ router.post('/refresh', userAuthController.refreshToken);
 router.post('/register', userAuthController.register);
 
 // 添加获取当前用户信息路由
-router.get('/me', userApiMiddleware.authenticated, userAuthController.getCurrentUser);
+router.get('/me', stacks.user.authenticated, userAuthController.getCurrentUser);
 
 // 添加修改密码路由
-router.put('/password', userApiMiddleware.authenticated, userAuthController.changePassword);
+router.put('/password', stacks.user.authenticated, userAuthController.changePassword);
 
 // 添加验证令牌路由
 router.get('/verify', userAuthController.verifyToken);

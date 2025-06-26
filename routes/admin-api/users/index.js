@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { adminApiMiddleware } = require('../../../middleware/adminApi');
+const { stacks, factories } = require('../../../middleware');
 const { AdminUserController } = require('../../../controllers');
 
 // 创建控制器实例
@@ -107,31 +107,31 @@ const adminUserController = new AdminUserController();
  *               $ref: '#/components/schemas/Error'
  */
 // 用户列表
-router.get('/', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserList);
+router.get('/', factories.createAdminPermissionStack(['user:read']), adminUserController.getUserList);
 
 // 用户详情
-router.get('/:id', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserDetail);
+router.get('/:id', factories.createAdminPermissionStack(['user:read']), adminUserController.getUserDetail);
 
 // 创建用户
-router.post('/', adminApiMiddleware.withPermissions(['user:create']), adminUserController.createUser);
+router.post('/', factories.createAdminPermissionStack(['user:create']), adminUserController.createUser);
 
 // 更新用户信息
-router.put('/:id', adminApiMiddleware.withPermissions(['user:write']), adminUserController.updateUser);
+router.put('/:id', factories.createAdminPermissionStack(['user:write']), adminUserController.updateUser);
 
 // 更新用户状态
-router.patch('/:id/status', adminApiMiddleware.sensitiveOperation('user-status-change', ['user:write']), adminUserController.updateUserStatus);
+router.patch('/:id/status', stacks.admin.sensitive, adminUserController.updateUserStatus);
 
 // 重置用户密码
-router.post('/:id/reset-password', adminApiMiddleware.sensitiveOperation('password-reset', ['user:write']), adminUserController.resetUserPassword);
+router.post('/:id/reset-password', stacks.admin.sensitive, adminUserController.resetUserPassword);
 
 // 删除用户
-router.delete('/:id', adminApiMiddleware.sensitiveOperation('user-delete', ['user:delete']), adminUserController.deleteUser);
+router.delete('/:id', stacks.admin.sensitive, adminUserController.deleteUser);
 
 // 批量更新用户状态
-router.patch('/batch/status', adminApiMiddleware.withPermissions(['user:write']), adminUserController.batchUpdateUserStatus);
+router.patch('/batch/status', factories.createAdminPermissionStack(['user:write']), adminUserController.batchUpdateUserStatus);
 
 // 用户统计信息
-router.get('/statistics', adminApiMiddleware.withPermissions(['user:read']), adminUserController.getUserStatistics);
+router.get('/statistics', factories.createAdminPermissionStack(['user:read']), adminUserController.getUserStatistics);
 
 /**
  * @swagger
@@ -172,7 +172,7 @@ router.get('/statistics', adminApiMiddleware.withPermissions(['user:read']), adm
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', adminApiMiddleware.withPermissions(['user:read']), function(req, res) {
+router.get('/:id', factories.createAdminPermissionStack(['user:read']), function(req, res) {
   // TODO: 实现获取用户详情逻辑
   const { id } = req.params;
   
@@ -240,8 +240,8 @@ router.get('/:id', adminApiMiddleware.withPermissions(['user:read']), function(r
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id/status', 
-  adminApiMiddleware.sensitiveOperation('user-status-change', ['user:write']), 
+router.put('/:id/status',
+  stacks.admin.sensitive,
   function(req, res) {
     // TODO: 实现更新用户状态逻辑
     const { id } = req.params;
@@ -297,7 +297,7 @@ router.put('/:id/status',
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:id', adminApiMiddleware.superAdmin, function(req, res) {
+router.delete('/:id', stacks.admin.superAdmin, function(req, res) {
   // TODO: 实现删除用户逻辑
   const { id } = req.params;
   

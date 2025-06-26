@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { userApiMiddleware } = require('../../../middleware/userApi');
+const { stacks } = require('../../../middleware');
 const { UserProfileController } = require('../../../controllers');
 
 // 创建控制器实例
@@ -86,7 +86,7 @@ const userProfileController = new UserProfileController();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', userApiMiddleware.authenticated, userProfileController.getProfile);
+router.get('/', stacks.user.authenticated, userProfileController.getProfile);
 
 /**
  * @swagger
@@ -145,7 +145,7 @@ router.get('/', userApiMiddleware.authenticated, userProfileController.getProfil
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/', userApiMiddleware.authenticated, userProfileController.updateProfile);
+router.put('/', stacks.user.authenticated, userProfileController.updateProfile);
 
 /**
  * @swagger
@@ -199,9 +199,9 @@ router.put('/', userApiMiddleware.authenticated, userProfileController.updatePro
  *               $ref: '#/components/schemas/Error'
  */
 // 添加更多路由
-router.post('/avatar', userApiMiddleware.authenticated, userProfileController.uploadAvatar);
-router.get('/stats', userApiMiddleware.authenticated, userProfileController.getStats);
-router.get('/completeness', userApiMiddleware.authenticated, userProfileController.getProfileCompleteness);
+router.post('/avatar', stacks.user.authenticated, userProfileController.uploadAvatar);
+router.get('/stats', stacks.user.authenticated, userProfileController.getStats);
+router.get('/completeness', stacks.user.authenticated, userProfileController.getProfileCompleteness);
 router.get('/check-username/:username', userProfileController.checkUsername);
 router.get('/:userId', userProfileController.getUserBasicInfo);
 

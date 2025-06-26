@@ -58,10 +58,10 @@ router.get('/', function(req, res) {
 });
 
 // 引入管理端专用中间件
-const { adminApiMiddleware } = require('../../middleware/adminApi');
+const { adminApi } = require('../../middleware');
 
 // 应用管理端基础中间件到所有路由
-router.use(adminApiMiddleware.base);
+router.use(adminApi);
 
 // 引入管理端子路由模块
 const usersRouter = require('./users');

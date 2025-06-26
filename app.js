@@ -325,7 +325,8 @@ console.log('  管理端API文档: http://localhost:3000/api-docs/admin');
 const routes = require('./routes');
 app.use('/api', routes);
 
-const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { quick } = require('./middleware');
+const { errorHandler, notFoundHandler } = quick;
 
 // catch 404 and forward to error handler
 app.use(notFoundHandler);

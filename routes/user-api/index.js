@@ -58,10 +58,10 @@ router.get('/', function(req, res) {
 });
 
 // 引入用户端专用中间件
-const { userApiMiddleware } = require('../../middleware/userApi');
+const { userApi } = require('../../middleware');
 
 // 应用用户端基础中间件到所有路由
-router.use(userApiMiddleware.base);
+router.use(userApi);
 
 // 引入用户端子路由模块
 const authRouter = require('./auth');

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { adminApiMiddleware } = require('../../../middleware/adminApi');
+const { stacks, factories } = require('../../../middleware');
 const { AdminSystemController } = require('../../../controllers');
 
 // 创建控制器实例
@@ -68,7 +68,7 @@ const adminSystemController = new AdminSystemController();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/info', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemInfo);
+router.get('/info', factories.createAdminPermissionStack(['system:read']), adminSystemController.getSystemInfo);
 
 /**
  * @swagger
@@ -121,7 +121,7 @@ router.get('/info', adminApiMiddleware.withPermissions(['system:read']), adminSy
  *                           type: number
  *                           example: 150.5
  */
-router.get('/statistics', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemStatistics);
+router.get('/statistics', factories.createAdminPermissionStack(['system:read']), adminSystemController.getSystemStatistics);
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.get('/statistics', adminApiMiddleware.withPermissions(['system:read']), a
  *                           meta:
  *                             type: object
  */
-router.get('/logs', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemLogs);
+router.get('/logs', factories.createAdminPermissionStack(['system:read']), adminSystemController.getSystemLogs);
 
 /**
  * @swagger
@@ -210,15 +210,15 @@ router.get('/logs', adminApiMiddleware.withPermissions(['system:read']), adminSy
  *             schema:
  *               $ref: '#/components/schemas/Success'
  */
-router.post('/cache/clear', adminApiMiddleware.sensitiveOperation('cache-clear', ['system:write']), adminSystemController.clearSystemCache);
+router.post('/cache/clear', stacks.admin.sensitive, adminSystemController.clearSystemCache);
 
 // 添加更多路由
-router.get('/health', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getHealthStatus);
-router.get('/config', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getSystemConfig);
-router.put('/config', adminApiMiddleware.sensitiveOperation('config-update', ['system:write']), adminSystemController.updateSystemConfig);
-router.post('/restart', adminApiMiddleware.sensitiveOperation('system-restart', ['system:admin']), adminSystemController.restartApplication);
-router.get('/api-stats', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getApiStatistics);
-router.post('/export', adminApiMiddleware.sensitiveOperation('data-export', ['system:admin']), adminSystemController.exportSystemData);
-router.get('/performance', adminApiMiddleware.withPermissions(['system:read']), adminSystemController.getPerformanceMetrics);
+router.get('/health', factories.createAdminPermissionStack(['system:read']), adminSystemController.getHealthStatus);
+router.get('/config', factories.createAdminPermissionStack(['system:read']), adminSystemController.getSystemConfig);
+router.put('/config', stacks.admin.sensitive, adminSystemController.updateSystemConfig);
+router.post('/restart', stacks.admin.superAdmin, adminSystemController.restartApplication);
+router.get('/api-stats', factories.createAdminPermissionStack(['system:read']), adminSystemController.getApiStatistics);
+router.post('/export', stacks.admin.superAdmin, adminSystemController.exportSystemData);
+router.get('/performance', factories.createAdminPermissionStack(['system:read']), adminSystemController.getPerformanceMetrics);
 
 module.exports = router;
