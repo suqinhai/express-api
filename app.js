@@ -11,21 +11,30 @@ var swaggerUi = require('swagger-ui-express');
 var morganLogger = require('morgan');  // 重命名morgan日志器，避免冲突
 var { requestLogger, logger } = require('./common/logger'); // 直接从logger模块导入
 
-var { sequelize, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
+var { sequelize, mongodb, sendSuccess, sendError, sendBadRequest, sendUnauthorized, sendResponse, initI18n, createMiddleware } = require('./common/index')
 var { globalLimiter } = require('./middleware');
 
-var indexRouter = require('./routes/index');
+// var indexRouter = require('./routes/index');
 var app = express();
 
-// 初始化i18n
+// 初始化i18n和数据库连接
 (async () => {
   try {
     await initI18n();
     console.log('i18n initialized successfully');
+
+    // 初始化MongoDB连接
+    try {
+      await mongodb.connectMongoDB();
+      console.log('MongoDB connection initialized successfully');
+    } catch (error) {
+      console.warn('MongoDB connection failed, continuing without MongoDB:', error.message);
+    }
   } catch (error) {
     console.error('Failed to initialize i18n:', error);
   }
 })();
+
 // 添加i18n中间件 (必须在其他路由之前)
 app.use(createMiddleware());
 
@@ -79,6 +88,7 @@ app.use(globalLimiter);
 // app.use(bodyParser.json());
 app.use(function (req, res, next) {
   res.sequelize = sequelize;
+  res.mongodb = mongodb;
   res.sendResponse = (status, success, message, options) => sendResponse(res, status, success, message, options);
   res.sendSuccess = (message, options) => sendSuccess(res, message, options);
   res.sendBadRequest = (message, options) => sendBadRequest(res, message, options);
@@ -227,11 +237,68 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-// 设置Swagger UI路由
+// 创建用户端API文档配置
+const userApiSwaggerOptions = {
+  ...swaggerOptions,
+  definition: {
+    ...swaggerOptions.definition,
+    info: {
+      title: '用户端API文档',
+      version: '1.0.0',
+      description: '用户端API接口文档，提供面向普通用户的功能接口',
+      contact: {
+        name: '技术支持',
+        email: 'support@example.com'
+      }
+    }
+  },
+  apis: [
+    path.join(__dirname, './routes/user-api/**/*.js')
+  ]
+};
+
+// 创建管理端API文档配置
+const adminApiSwaggerOptions = {
+  ...swaggerOptions,
+  definition: {
+    ...swaggerOptions.definition,
+    info: {
+      title: '管理端API文档',
+      version: '1.0.0',
+      description: '管理端API接口文档，提供面向管理员的管理功能接口',
+      contact: {
+        name: '技术支持',
+        email: 'support@example.com'
+      }
+    }
+  },
+  apis: [
+    path.join(__dirname, './routes/admin-api/**/*.js')
+  ]
+};
+
+const userApiSwaggerSpec = swaggerJsdoc(userApiSwaggerOptions);
+const adminApiSwaggerSpec = swaggerJsdoc(adminApiSwaggerOptions);
+
+// 设置通用Swagger UI路由
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: '后台API文档'
+  customSiteTitle: '通用API文档'
+}));
+
+// 设置用户端Swagger UI路由
+app.use('/api-docs/user', swaggerUi.serve, swaggerUi.setup(userApiSwaggerSpec, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: '用户端API文档'
+}));
+
+// 设置管理端Swagger UI路由
+app.use('/api-docs/admin', swaggerUi.serve, swaggerUi.setup(adminApiSwaggerSpec, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: '管理端API文档'
 }));
 
 // 提供Swagger JSON端点
@@ -240,24 +307,30 @@ app.get('/api-docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-console.log('Swagger文档已启用: http://localhost:3000/api-docs');
+app.get('/api-docs/user.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(userApiSwaggerSpec);
+});
 
-app.use('/', indexRouter);
+app.get('/api-docs/admin.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(adminApiSwaggerSpec);
+});
+
+console.log('Swagger文档已启用:');
+console.log('  通用API文档: http://localhost:3000/api-docs');
+console.log('  用户端API文档: http://localhost:3000/api-docs/user');
+console.log('  管理端API文档: http://localhost:3000/api-docs/admin');
+
+const routes = require('./routes');
+app.use('/api', routes);
+
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
-});
+app.use(notFoundHandler);
 
 // error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+app.use(errorHandler);
 
 module.exports = app;

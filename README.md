@@ -11,7 +11,7 @@
 
 ### 🚀 现代化架构
 - **Express.js 4.18.2** - 高性能Node.js Web框架
-- **MySQL 8.0 + Sequelize ORM** - 强大的关系型数据库支持
+- **双数据库支持** - MySQL + Sequelize ORM (关系型数据) + MongoDB + Mongoose ODM (文档型数据)
 - **Redis 7** - 高性能缓存和会话存储
 - **JWT认证** - 安全的用户认证机制
 - **Swagger UI** - 自动生成的API文档
@@ -26,8 +26,6 @@
 
 ### 🔧 开发体验
 - **热重载** - 开发环境自动重启
-- **ESLint + Prettier** - 代码质量和格式化
-- **Jest测试** - 完整的单元测试框架
 - **Winston日志** - 结构化日志记录
 - **国际化(i18n)** - 多语言支持
 - **健康检查** - 应用状态监控
@@ -54,13 +52,13 @@ express-api/
 │   ├── rateLimit/      # 限流中间件
 │   └── validator/      # 验证中间件
 ├── common/             # 公共模块
-│   ├── mysql/          # 数据库连接
+│   ├── mysql/          # MySQL数据库连接
+│   ├── mango/          # MongoDB数据库连接
 │   ├── redis/          # Redis连接
 │   ├── logger/         # 日志系统
 │   ├── i18n/           # 国际化
 │   └── util/           # 工具函数
 ├── env/                # 环境配置
-├── tests/              # 测试文件
 ├── scripts/            # 脚本文件
 ├── docker-compose.yml  # Docker编排
 ├── Dockerfile         # Docker镜像
@@ -73,8 +71,9 @@ express-api/
 
 - **Node.js** >= 16.0.0
 - **npm** >= 8.0.0
-- **MySQL** >= 8.0
-- **Redis** >= 6.0
+- **MySQL** >= 8.0 (关系型数据存储)
+- **MongoDB** >= 4.4 (可选，文档型数据存储)
+- **Redis** >= 6.0 (可选，缓存存储)
 - **Docker** (可选，用于容器化部署)
 
 ### 本地开发
@@ -95,7 +94,7 @@ npm install
 # 复制环境配置文件
 cp env/dev.env .env
 
-# 编辑配置文件，设置数据库和Redis连接信息
+# 编辑配置文件，设置MySQL、MongoDB和Redis连接信息
 nano .env
 ```
 
@@ -110,8 +109,11 @@ make dev
 
 5. **访问应用**
 - API服务: http://localhost:3000
-- API文档: http://localhost:3000/api-docs
+- 通用API文档: http://localhost:3000/api-docs
+- 用户端API文档: http://localhost:3000/api-docs/user
+- 管理端API文档: http://localhost:3000/api-docs/admin
 - 健康检查: http://localhost:3000/health
+- MongoDB测试: http://localhost:3000/mongodb-test
 
 ### Docker快速启动
 
@@ -136,9 +138,6 @@ make prod-bg
 ```bash
 npm run dev          # 开发模式启动
 npm run start:prod   # 生产模式启动
-npm test            # 运行测试
-npm run lint        # 代码检查
-npm run format      # 代码格式化
 npm run db:sync     # 同步数据库
 ```
 
@@ -147,8 +146,6 @@ npm run db:sync     # 同步数据库
 make help           # 显示所有可用命令
 make dev            # 启动开发环境
 make prod-bg        # 后台启动生产环境
-make test           # 运行测试
-make lint-fix       # 修复代码问题
 make clean          # 清理临时文件
 ```
 
@@ -182,19 +179,6 @@ Redis缓存支持多级TTL配置：
 - 中期缓存：1小时
 - 长期缓存：1天
 
-## 🧪 测试
-
-```bash
-# 运行所有测试
-npm test
-
-# 监视模式
-npm run test:watch
-
-# 生成覆盖率报告
-make test-coverage
-```
-
 ## 📊 监控与日志
 
 ### 日志系统
@@ -223,6 +207,52 @@ make test-coverage
 - **JWT认证**: 安全的用户认证
 - **密码加密**: bcrypt哈希加密
 
+## 🔗 API接口分类
+
+本项目支持三种类型的API接口，满足不同场景的需求：
+
+### 用户端接口 (`/api/user/*`)
+- **目标用户**: 普通终端用户
+- **认证方式**: JWT令牌认证（部分接口支持可选认证）
+- **限流策略**: 相对宽松（每15分钟1000次请求）
+- **功能范围**: 用户认证、个人资料管理、基础业务功能
+- **API文档**: http://localhost:3000/api-docs/user
+
+**示例接口**:
+```
+POST /api/user/auth/login     # 用户登录
+GET  /api/user/profile        # 获取个人资料
+PUT  /api/user/profile        # 更新个人资料
+```
+
+### 管理端接口 (`/api/admin/*`)
+- **目标用户**: 系统管理员
+- **认证方式**: 管理员JWT令牌认证（严格权限验证）
+- **限流策略**: 相对严格（每15分钟500次请求）
+- **功能范围**: 用户管理、系统管理、数据统计、敏感操作
+- **API文档**: http://localhost:3000/api-docs/admin
+
+**示例接口**:
+```
+GET    /api/admin/users           # 获取用户列表
+PUT    /api/admin/users/:id/status # 更新用户状态
+GET    /api/admin/system/info     # 获取系统信息
+POST   /api/admin/system/cache/clear # 清除系统缓存
+```
+
+### 通用接口 (`/*`)
+- **目标用户**: 所有用户
+- **认证方式**: 无需认证或基础认证
+- **功能范围**: 健康检查、基础信息、公共功能
+- **API文档**: http://localhost:3000/api-docs
+
+**示例接口**:
+```
+GET /health           # 健康检查
+GET /mongodb-test     # MongoDB连接测试
+GET /cache-demo       # 缓存演示
+```
+
 ## 🌍 国际化
 
 支持多语言配置：
@@ -231,11 +261,65 @@ make test-coverage
 - 动态语言切换
 - 错误消息本地化
 
+## 🗄️ 双数据库架构
+
+本项目支持MySQL和MongoDB双数据库并存，您可以根据不同的业务需求选择合适的数据库：
+
+### MySQL (关系型数据库)
+- **适用场景**: 结构化数据、事务处理、复杂关联查询
+- **ORM**: Sequelize
+- **连接配置**: `env/dev.env` 中的 `DB_*` 配置项
+- **使用方式**: 通过 `res.sequelize` 访问
+
+```javascript
+// 在路由中使用MySQL
+router.get('/users', async (req, res) => {
+  const users = await res.sequelize.models.User.findAll();
+  res.sendSuccess('获取用户列表成功', { data: users });
+});
+```
+
+### MongoDB (文档型数据库)
+- **适用场景**: 非结构化数据、灵活模式、高性能读写
+- **ODM**: Mongoose
+- **连接配置**: `env/dev.env` 中的 `MONGO_*` 配置项
+- **使用方式**: 通过 `res.mongodb` 访问
+
+```javascript
+// 在路由中使用MongoDB
+router.post('/logs', async (req, res) => {
+  const { mongoose } = res.mongodb;
+  const result = await mongoose.connection.db
+    .collection('logs')
+    .insertOne(req.body);
+  res.sendSuccess('日志保存成功', { data: result });
+});
+```
+
+### 环境配置示例
+```bash
+# MySQL配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASS=123456
+DB_NAME=testSxx
+
+# MongoDB配置
+MONGO_URI=mongodb://localhost:27017/testSxx
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DB_NAME=testSxx
+```
+
+### 健康检查
+系统会自动检查两个数据库的连接状态，访问 `/health` 端点查看详细状态。
+
 ## 📈 性能优化
 
 - **响应压缩**: gzip压缩减少传输大小
 - **静态资源缓存**: 智能缓存策略
-- **数据库连接池**: 高效的连接管理
+- **数据库连接池**: MySQL和MongoDB的高效连接管理
 - **Redis缓存**: 减少数据库查询
 - **集群模式**: 多进程负载均衡
 
@@ -264,7 +348,8 @@ make test-coverage
 
 - [ ] GraphQL支持
 - [ ] 微服务架构支持
-- [ ] 更多数据库支持 (PostgreSQL, MongoDB)
+- [x] 双数据库支持 (MySQL + MongoDB)
+- [ ] 更多数据库支持 (PostgreSQL)
 - [ ] 实时通信 (WebSocket)
 - [ ] 消息队列集成
 - [ ] 监控仪表板

@@ -6,6 +6,7 @@ const os = require('os');
 const { logger } = require('./logger');
 const sequelize = require('./mysql');
 const { redis: redisClient } = require('./redis');
+const { mongoHealthCheck } = require('./mango');
 
 /**
  * 健康检查类
@@ -17,15 +18,17 @@ class HealthCheck {
    */
   async checkAll() {
     try {
-      const [dbStatus, cacheStatus, systemStatus] = await Promise.all([
+      const [dbStatus, mongoStatus, cacheStatus, systemStatus] = await Promise.all([
         this.checkDatabase(),
+        this.checkMongoDB(),
         this.checkCache(),
         this.checkSystem()
       ]);
 
       // 综合状态评估
-      const isHealthy = 
+      const isHealthy =
         dbStatus.status === 'ok' &&
+        mongoStatus.status === 'ok' &&
         cacheStatus.status === 'ok' &&
         systemStatus.status === 'ok';
 
@@ -35,6 +38,7 @@ class HealthCheck {
         uptime: process.uptime(),
         components: {
           database: dbStatus,
+          mongodb: mongoStatus,
           cache: cacheStatus,
           system: systemStatus
         },
@@ -88,6 +92,53 @@ class HealthCheck {
         error: error.message,
         details: {
           dialect: sequelize?.getDialect() || 'unknown',
+          connection: 'inactive'
+        }
+      };
+    }
+  }
+
+  /**
+   * 检查MongoDB连接状态
+   * @returns {Promise<Object>} MongoDB健康状态
+   */
+  async checkMongoDB() {
+    try {
+      const mongoStatus = await mongoHealthCheck();
+
+      if (mongoStatus.status === 'healthy') {
+        return {
+          status: 'ok',
+          details: {
+            connection: 'active',
+            database: mongoStatus.database,
+            state: mongoStatus.state
+          }
+        };
+      } else if (mongoStatus.status === 'disconnected') {
+        return {
+          status: 'not_configured',
+          details: {
+            connection: 'inactive',
+            message: 'MongoDB未连接'
+          }
+        };
+      } else {
+        return {
+          status: 'error',
+          error: mongoStatus.message,
+          details: {
+            connection: 'inactive',
+            state: mongoStatus.state || 'unknown'
+          }
+        };
+      }
+    } catch (error) {
+      logger.error('MongoDB健康检查失败', error);
+      return {
+        status: 'error',
+        error: error.message,
+        details: {
           connection: 'inactive'
         }
       };

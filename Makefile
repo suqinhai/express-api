@@ -68,35 +68,9 @@ install-clean: ## 清理并重新安装依赖
 update: ## 更新依赖
 	npm update
 
-# 代码质量
-.PHONY: lint
-lint: ## 运行ESLint检查
-	npm run lint
 
-.PHONY: lint-fix
-lint-fix: ## 自动修复ESLint问题
-	npm run lint:fix
 
-.PHONY: format
-format: ## 格式化代码
-	npm run format
 
-.PHONY: format-check
-format-check: ## 检查代码格式
-	npx prettier --check .
-
-# 测试
-.PHONY: test
-test: ## 运行测试
-	npm test
-
-.PHONY: test-watch
-test-watch: ## 监视模式运行测试
-	npm run test:watch
-
-.PHONY: test-coverage
-test-coverage: ## 运行测试并生成覆盖率报告
-	npm test -- --coverage
 
 # 数据库
 .PHONY: db-sync

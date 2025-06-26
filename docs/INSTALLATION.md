@@ -202,8 +202,6 @@ npm install
 # 安装常用的全局工具
 npm install -g nodemon
 npm install -g pm2
-npm install -g eslint
-npm install -g prettier
 ```
 
 ## ⚙️ 环境配置

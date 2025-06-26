@@ -1,4 +1,5 @@
 const sequelize = require('./mysql');
+const mongodb = require('./mango');
 const routeHandler = require('./routeHandler');
 const redis = require('./redis');
 const cacheManager = require('./redis/cache');
@@ -11,6 +12,7 @@ module.exports = {
     ...util,
     ...routeHandler,
     sequelize,
+    mongodb,
     redis,
     cacheManager,
     schedule,
