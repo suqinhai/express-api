@@ -43,7 +43,7 @@ const errorHandler = (err, req, res, next) => {
     // 根据错误类型返回不同响应
     if (err.name === 'ValidationError') {
         return res.status(400).json({
-            success: false,
+            success: 0,
             message: '数据验证失败',
             code: 'VALIDATION_ERROR',
             details: err.details
@@ -52,7 +52,7 @@ const errorHandler = (err, req, res, next) => {
 
     // 默认服务器错误
     res.status(500).json({
-        success: false,
+        success: 0,
         message: '服务器内部错误',
         code: 'INTERNAL_ERROR'
     });
@@ -111,7 +111,7 @@ const authenticateToken = (req, res, next) => {
 
     if (!token) {
         return res.status(401).json({
-            success: false,
+            success: 0,
             message: '访问令牌缺失',
             code: 'TOKEN_MISSING'
         });
@@ -120,7 +120,7 @@ const authenticateToken = (req, res, next) => {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             return res.status(403).json({
-                success: false,
+                success: 0,
                 message: '访问令牌无效',
                 code: 'TOKEN_INVALID'
             });
@@ -137,7 +137,7 @@ const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
             return res.status(403).json({
-                success: false,
+                success: 0,
                 message: '权限不足',
                 code: 'INSUFFICIENT_PERMISSIONS'
             });
