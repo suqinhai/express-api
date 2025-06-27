@@ -9,9 +9,12 @@ alwaysApply: true
 ## 架构模式
 
 ### MVC架构实现
-- Model: 数据模型和数据库交互逻辑
-- View: API响应格式和数据序列化
-- Controller: 请求处理和业务流程控制
+- Controller: 控制器层，处理HTTP请求和响应
+- Service: 业务逻辑层，包含核心业务处理
+- Model: 数据模型层，定义数据结构和数据库操作
+- Middleware: 中间件，包含认证、验证、错误处理等
+- Routes: 路由定义，组织API端点
+- Common: 公共工具和配置
 
 ### 分层架构
 ```

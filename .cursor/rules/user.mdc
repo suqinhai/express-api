@@ -7,7 +7,7 @@ alwaysApply: true
 # Express API项目 - Augment Code规则
 
 ## 项目概述
-这是一个基于Express.js的后端API项目，包含支付系统、活动管理、用户管理等功能模块。
+这是一个基于Express.js的后端API项目。
 
 ## 编码规范
 
@@ -18,6 +18,7 @@ alwaysApply: true
 - 使用const和let，避免使用var
 - 异步操作优先使用async/await而不是Promise.then()
 - 错误处理必须完整，包含try-catch块
+- 每步代码都写上注释
 
 ### 文件结构规范
 - controllers/: 控制器层，处理HTTP请求和响应
@@ -29,13 +30,14 @@ alwaysApply: true
 
 ### API设计规范
 - RESTful API设计原则
-- 统一的响应格式：{ success: boolean, data: any, message: string, code: number }
+- 字段不要使用boolean类型,用0和1代替,和不要使用枚举使用数字代替
+- 统一的响应格式：{ success: 0 || 1, data: any, message: string, code: number }
 - 适当的HTTP状态码使用
 - API版本控制考虑
 - 完整的错误处理和用户友好的错误消息
 
 ### 数据库操作规范
-- 使用Sequelize ORM进行数据库操作
+- 使用Sequelize ORM或进行数据库操作
 - 事务处理要完整
 - 数据验证在模型层和控制器层都要进行
 - 敏感数据要加密存储
@@ -60,6 +62,7 @@ alwaysApply: true
 - 使用Jest测试框架
 - API集成测试
 - 测试数据要独立，不影响生产数据
+- 测试完要把测试代码、数据删除
 
 ## AI助手行为指导
 
@@ -91,31 +94,21 @@ alwaysApply: true
 - 不要硬编码敏感信息
 - 不要忽略错误处理
 - 不要破坏现有的API接口
+- 尽量不使用枚举和boolean,使用number替代
 
 ## 项目特定配置
 
 ### 环境变量
 项目使用多环境配置：
-- development.env: 开发环境
+- dev.env: 开发环境
 - test.env: 测试环境
-- dev.env: 开发服务器环境
+- pro.env: 生产服务器环境
 
 ### 数据库配置
-- 使用MySQL数据库
-- Sequelize ORM
+- 合理使用MySQL或mango数据库
+- Sequelize ORM 或 mongoose
 - 连接池配置已优化
 - 支持事务处理
-
-### 支付系统
-- 插件化支付网关架构
-- 支持多种支付方式
-- 完整的支付流程管理
-- 支付安全验证
-
-### 活动管理
-- 活动创建和管理
-- 参与者管理
-- 活动状态跟踪
 
 ## 代码示例模板
 
