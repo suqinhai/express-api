@@ -1,53 +1,71 @@
 /**
  * 基础服务类
- * 提供通用的服务功能和方法
- * 所有服务都应该继承此类
+ * 功能：提供所有服务的通用功能和方法，实现业务逻辑的代码复用和统一规范
+ * 设计模式：模板方法模式，定义服务的基本结构和通用操作
+ * 继承：所有业务服务都应该继承此类以获得统一的功能
+ * 职责：数据库事务管理、缓存操作、日志记录、数据验证等
  */
 
+// 引入日志模块，用于记录服务操作和错误信息
 const { logger } = require('../../common/logger');
+// 引入缓存管理器，用于数据缓存和性能优化
 const { cacheManager } = require('../../common');
 
 class BaseService {
+  /**
+   * 构造函数：初始化基础服务
+   * 设置日志器和缓存管理器实例，供子类使用
+   */
   constructor() {
+    // 将日志器实例赋值给实例属性，便于子类记录操作日志
     this.logger = logger;
+    // 将缓存管理器实例赋值给实例属性，便于子类进行缓存操作
     this.cache = cacheManager;
   }
 
   /**
-   * 执行数据库事务
-   * @param {Function} callback - 事务回调函数
-   * @param {Object} sequelize - Sequelize实例
-   * @returns {Promise} 事务结果
+   * 执行数据库事务方法：提供统一的事务管理
+   * 功能：自动处理事务的开始、提交和回滚，确保数据一致性
+   * @param {Function} callback - 事务回调函数，包含需要在事务中执行的操作
+   * @param {Object} sequelize - Sequelize数据库实例
+   * @returns {Promise} 事务执行结果
    */
   async executeTransaction(callback, sequelize) {
+    // 开始数据库事务
     const transaction = await sequelize.transaction();
-    
+
     try {
+      // 执行事务回调函数，传入事务对象
       const result = await callback(transaction);
+      // 如果执行成功，提交事务
       await transaction.commit();
       return result;
     } catch (error) {
+      // 如果执行失败，回滚事务以保持数据一致性
       await transaction.rollback();
+      // 重新抛出错误，让上层处理
       throw error;
     }
   }
 
   /**
-   * 缓存获取或设置
-   * @param {string} key - 缓存键
-   * @param {Function} fetchFunction - 数据获取函数
-   * @param {number} ttl - 缓存时间(秒)
-   * @returns {Promise} 缓存数据
+   * 缓存获取或设置方法：实现缓存的读取和写入逻辑
+   * 功能：先尝试从缓存获取数据，如果不存在则从数据源获取并缓存
+   * @param {string} key - 缓存键名
+   * @param {Function} fetchFunction - 数据获取函数，当缓存不存在时调用
+   * @param {number} ttl - 缓存生存时间（秒），默认1小时
+   * @returns {Promise} 缓存或新获取的数据
    */
   async getOrSetCache(key, fetchFunction, ttl = 3600) {
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存中获取数据
       const cachedData = await this.cache.get('service', key);
       if (cachedData !== null) {
+        // 如果缓存存在，直接返回缓存数据
         return cachedData;
       }
 
-      // 从数据源获取
+      // 如果缓存不存在，从数据源获取数据
       const freshData = await fetchFunction();
       
       // 设置缓存

@@ -1,48 +1,62 @@
 /**
- * 用户认证控制器
- * 处理用户端认证相关的HTTP请求
+ * 用户认证控制器类
+ * 功能：处理用户端认证相关的HTTP请求，包括登录、注册、令牌管理等
+ * 继承：BaseController，获得统一的响应格式和错误处理能力
+ * 职责：验证请求参数、调用服务层、返回标准化响应
  */
 
+// 引入基础控制器类，提供通用的控制器功能
 const BaseController = require('../base/BaseController');
+// 引入用户认证服务类，处理具体的认证业务逻辑
 const UserAuthService = require('../../services/user/UserAuthService');
 
 class UserAuthController extends BaseController {
+  /**
+   * 构造函数：初始化用户认证控制器
+   * 调用父类构造函数并创建认证服务实例
+   */
   constructor() {
+    // 调用父类构造函数，获得基础功能
     super();
+    // 创建用户认证服务实例，用于处理业务逻辑
     this.userAuthService = new UserAuthService();
   }
 
   /**
-   * 用户登录
-   * POST /api/user/auth/login
+   * 用户登录方法
+   * 路由：POST /api/user/auth/login
+   * 功能：验证用户凭据，生成访问令牌和刷新令牌
    */
   login = this.asyncHandler(async (req, res) => {
     try {
+      // 记录登录请求操作日志
       this.logAction('用户登录请求', req);
 
+      // 从请求体中提取用户名和密码
       const { username, password } = req.body;
 
-      // 验证必需参数
+      // 验证必需参数是否存在
       const validationErrors = this.validateRequiredFields(req, ['username', 'password']);
       if (validationErrors) {
         return this.sendError(res, '请求参数不完整', 400, validationErrors);
       }
 
-      // 调用服务层处理登录
+      // 调用服务层处理登录逻辑，传入数据库连接
       const result = await this.userAuthService.login(username, password, res.sequelize);
 
-      // 返回成功响应
+      // 返回成功响应，包含用户信息和令牌
       return this.sendSuccess(res, '登录成功', {
-        user: result.user,
-        token: result.tokens.accessToken,
-        refreshToken: result.tokens.refreshToken,
-        expiresIn: result.tokens.expiresIn
+        user: result.user,                      // 用户基本信息
+        token: result.tokens.accessToken,      // 访问令牌
+        refreshToken: result.tokens.refreshToken,  // 刷新令牌
+        expiresIn: result.tokens.expiresIn     // 令牌过期时间
       });
 
     } catch (error) {
+      // 记录登录失败的错误日志
       this.logError('用户登录失败', error, req);
-      
-      // 根据错误类型返回不同的状态码
+
+      // 根据不同的错误类型返回相应的HTTP状态码和错误消息
       if (error.message.includes('用户不存在') || error.message.includes('密码错误')) {
         return this.sendError(res, '用户名或密码错误', 401);
       } else if (error.message.includes('状态异常')) {
@@ -56,51 +70,55 @@ class UserAuthController extends BaseController {
   });
 
   /**
-   * 用户注册
-   * POST /api/user/auth/register
+   * 用户注册方法
+   * 路由：POST /api/user/auth/register
+   * 功能：创建新用户账户，验证输入数据，生成初始令牌
    */
   register = this.asyncHandler(async (req, res) => {
     try {
+      // 记录注册请求操作日志
       this.logAction('用户注册请求', req);
 
+      // 从请求体中提取注册信息
       const { username, email, password, confirmPassword } = req.body;
 
-      // 验证必需参数
+      // 验证所有必需参数是否存在
       const validationErrors = this.validateRequiredFields(req, ['username', 'email', 'password', 'confirmPassword']);
       if (validationErrors) {
         return this.sendError(res, '请求参数不完整', 400, validationErrors);
       }
 
-      // 验证密码确认
+      // 验证密码确认是否一致
       if (password !== confirmPassword) {
         return this.sendError(res, '两次输入的密码不一致', 400);
       }
 
-      // 调用服务层处理注册
+      // 调用服务层处理用户注册逻辑
       const result = await this.userAuthService.register({
-        username,
-        email,
-        password
+        username,  // 用户名
+        email,     // 邮箱地址
+        password   // 密码（将在服务层进行加密）
       }, res.sequelize);
 
-      // 返回成功响应
+      // 返回成功响应，状态码201表示资源已创建
       return this.sendSuccess(res, '注册成功', {
-        user: result.user,
-        token: result.tokens.accessToken,
-        refreshToken: result.tokens.refreshToken,
-        expiresIn: result.tokens.expiresIn
+        user: result.user,                      // 新创建的用户信息
+        token: result.tokens.accessToken,      // 访问令牌
+        refreshToken: result.tokens.refreshToken,  // 刷新令牌
+        expiresIn: result.tokens.expiresIn     // 令牌过期时间
       }, 201);
 
     } catch (error) {
+      // 记录注册失败的错误日志
       this.logError('用户注册失败', error, req);
-      
-      // 根据错误类型返回不同的状态码
+
+      // 根据不同的错误类型返回相应的HTTP状态码和错误消息
       if (error.message.includes('已存在') || error.message.includes('已被注册')) {
-        return this.sendError(res, error.message, 409);
+        return this.sendError(res, error.message, 409);  // 409 Conflict - 资源冲突
       } else if (error.message.includes('验证失败')) {
-        return this.sendError(res, error.message, 400);
+        return this.sendError(res, error.message, 400);  // 400 Bad Request - 请求参数错误
       } else {
-        return this.sendError(res, '注册失败，请稍后重试', 500);
+        return this.sendError(res, '注册失败，请稍后重试', 500);  // 500 Internal Server Error - 服务器内部错误
       }
     }
   });
@@ -274,4 +292,5 @@ class UserAuthController extends BaseController {
   });
 }
 
+// 导出用户认证控制器类，供路由模块使用
 module.exports = UserAuthController;
