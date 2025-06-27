@@ -379,6 +379,29 @@ const userApiSwaggerSpec = swaggerJsdoc(userApiSwaggerOptions);
 // 根据管理端配置生成Swagger文档规范对象
 const adminApiSwaggerSpec = swaggerJsdoc(adminApiSwaggerOptions);
 
+// 创建商户端专用API文档配置，继承基础配置并覆盖特定设置
+const merchantApiSwaggerOptions = {
+  // 使用展开运算符继承基础配置
+  ...swaggerOptions,
+  definition: {
+    // 继承基础定义配置
+    ...swaggerOptions.definition,
+    // 覆盖API信息，专门针对商户端接口
+    info: {
+      title: '商户端API文档',
+      version: '1.0.0',
+      description: '商户端API接口文档，提供面向商户用户的管理功能接口',
+    }
+  },
+  // 指定商户端API路由文件的扫描路径
+  apis: [
+    path.join(__dirname, './routes/merchant-api/**/*.js')
+  ]
+};
+
+// 根据商户端配置生成Swagger文档规范对象
+const merchantApiSwaggerSpec = swaggerJsdoc(merchantApiSwaggerOptions);
+
 // 设置通用Swagger UI路由，提供所有API的统一文档界面
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   explorer: true,  // 启用API资源管理器，方便浏览不同的API分组
@@ -398,6 +421,13 @@ app.use('/api-docs/admin', swaggerUi.serve, swaggerUi.setup(adminApiSwaggerSpec,
   explorer: true,  // 启用API资源管理器
   customCss: '.swagger-ui .topbar { display: none }',  // 隐藏顶部栏
   customSiteTitle: '管理端API文档'  // 管理端文档标题
+}));
+
+// 设置商户端专用Swagger UI路由，只显示商户相关的API接口
+app.use('/api-docs/merchant', swaggerUi.serve, swaggerUi.setup(merchantApiSwaggerSpec, {
+  explorer: true,  // 启用API资源管理器
+  customCss: '.swagger-ui .topbar { display: none }',  // 隐藏顶部栏
+  customSiteTitle: '商户端API文档'  // 商户端文档标题
 }));
 
 // 提供Swagger JSON格式的API规范端点，供第三方工具或客户端使用
@@ -424,11 +454,20 @@ app.get('/api-docs/admin.json', (req, res) => {
   res.send(adminApiSwaggerSpec);
 });
 
+// 提供商户端API的JSON规范端点
+app.get('/api-docs/merchant.json', (req, res) => {
+  // 设置JSON响应头部
+  res.setHeader('Content-Type', 'application/json');
+  // 返回商户端API的Swagger规范
+  res.send(merchantApiSwaggerSpec);
+});
+
 // 在控制台输出Swagger文档的访问地址，方便开发者查看
 console.log('Swagger文档已启用:');
 console.log('  通用API文档: http://localhost:3000/api-docs');
 console.log('  用户端API文档: http://localhost:3000/api-docs/user');
 console.log('  管理端API文档: http://localhost:3000/api-docs/admin');
+console.log('  商户端API文档: http://localhost:3000/api-docs/merchant');
 
 // 引入并注册主路由模块，所有API路由都以/api为前缀
 const routes = require('./routes');

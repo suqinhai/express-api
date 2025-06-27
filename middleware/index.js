@@ -21,6 +21,7 @@ const helpers = require('./utils/helpers');
 // API中间件栈
 const userMiddleware = require('./api/user');
 const adminMiddleware = require('./api/admin');
+const merchantMiddleware = require('./api/merchant');
 const commonMiddleware = require('./api/common');
 
 // 配置
@@ -59,6 +60,7 @@ const utils = {
 const api = {
   user: userMiddleware,
   admin: adminMiddleware,
+  merchant: merchantMiddleware,
   common: commonMiddleware
 };
 
@@ -143,6 +145,18 @@ const stacks = {
     cachedQuery: adminMiddleware.cachedQuery,
     stats: adminMiddleware.stats
   },
+
+  // 商户端栈
+  merchant: {
+    public: merchantMiddleware.public,
+    authenticated: merchantMiddleware.authenticated,
+    optionalAuth: merchantMiddleware.optionalAuth,
+    cached: merchantMiddleware.cached,
+    sensitive: merchantMiddleware.sensitive,
+    login: merchantMiddleware.login,
+    product: merchantMiddleware.product,
+    shopAccess: merchantMiddleware.shopAccess
+  },
   
   // 通用栈
   common: {
@@ -167,6 +181,10 @@ const factories = {
   // 管理端工厂
   createAdminStack: adminMiddleware.custom,
   createAdminPermissionStack: adminMiddleware.withPermissions,
+
+  // 商户端工厂
+  createMerchantStack: merchantMiddleware.custom,
+  createMerchantPermissionStack: merchantMiddleware.withPermissions,
   
   // 通用工厂
   createCommonStack: commonMiddleware.custom,
@@ -231,7 +249,8 @@ const legacyExports = {
   modelCache: cache.adminDataCache,
   apiType: apiType.generalApiType,
   userApi: userMiddleware.authenticated,
-  adminApi: adminMiddleware.standard
+  adminApi: adminMiddleware.standard,
+  merchantApi: merchantMiddleware.authenticated
 };
 
 // 主导出对象
@@ -291,11 +310,14 @@ module.exports = {
       userPublic: 'middleware.stacks.user.public',
       userAuth: 'middleware.stacks.user.authenticated',
       adminStandard: 'middleware.stacks.admin.standard',
-      adminSensitive: 'middleware.stacks.admin.sensitive'
+      adminSensitive: 'middleware.stacks.admin.sensitive',
+      merchantAuth: 'middleware.stacks.merchant.authenticated',
+      merchantProduct: 'middleware.stacks.merchant.product'
     },
     factories: {
       customUser: 'middleware.factories.createUserStack({ auth: "required", caching: "medium" })',
       customAdmin: 'middleware.factories.createAdminStack({ auth: "superAdmin", audit: "sensitive" })',
+      customMerchant: 'middleware.factories.createMerchantStack({ auth: "required", limiting: "product", caching: "productList" })',
       customCommon: 'middleware.factories.createCommonStack({ limiting: "relaxed", caching: "long" })'
     }
   })
