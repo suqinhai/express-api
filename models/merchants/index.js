@@ -192,21 +192,27 @@ module.exports = {
     }
   },
 
-  // 商户端状态枚举
+  // 商户端状态枚举（已迁移到统一常量文件）
+  // 请使用 require('../../common/constants/status') 中的常量
   status: {
     merchant: {
       DISABLED: 0,    // 禁用
       ACTIVE: 1,      // 正常
-      PENDING: 2      // 审核中
+      PENDING: 2,     // 审核中
+      REJECTED: 3,    // 审核拒绝
+      SUSPENDED: 4    // 暂停营业
     },
     shop: {
       DISABLED: 0,    // 禁用
-      ACTIVE: 1       // 启用
+      ACTIVE: 1,      // 启用
+      MAINTENANCE: 2, // 维护中
+      CLOSED: 3       // 已关闭
     },
     product: {
       OFFLINE: 0,     // 下架
       ONLINE: 1,      // 上架
-      OUT_OF_STOCK: 2 // 缺货
+      OUT_OF_STOCK: 2,// 缺货
+      DISCONTINUED: 3 // 停产
     }
   },
 

@@ -7,6 +7,8 @@ const BaseService = require('../base/BaseService');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
+const { USER_STATUS, USER_ROLE, COMMON_STATUS } = require('../../common/constants/status');
+const { StatusHelper } = require('../../common/utils/statusHelper');
 
 class UserAuthService extends BaseService {
   constructor() {
@@ -54,15 +56,15 @@ class UserAuthService extends BaseService {
       }
 
       // 检查用户状态
-      if (user.status !== 'active') {
-        throw new Error(`用户状态异常: ${user.status}`);
+      if (!StatusHelper.isUserActive(user.status)) {
+        throw new Error(`用户状态异常: ${StatusHelper.getDescription('USER_STATUS', user.status)}`);
       }
 
       // 验证密码
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         // 记录登录失败
-        await this.recordLoginAttempt(user.id, false, sequelize);
+        await this.recordLoginAttempt(user.id, COMMON_STATUS.FAILED, sequelize);
         throw new Error('密码错误');
       }
 
@@ -76,7 +78,7 @@ class UserAuthService extends BaseService {
       });
 
       // 记录登录成功
-      await this.recordLoginAttempt(user.id, true, sequelize);
+      await this.recordLoginAttempt(user.id, COMMON_STATUS.SUCCESS, sequelize);
 
       // 清除敏感信息
       const userInfo = this.sanitizeUserInfo(user);
@@ -237,12 +239,12 @@ class UserAuthService extends BaseService {
       if (decoded && decoded.exp) {
         const ttl = decoded.exp - Math.floor(Date.now() / 1000);
         if (ttl > 0) {
-          await this.cache.set('blacklist', token, true, ttl);
+          await this.cache.set('blacklist', token, COMMON_STATUS.YES, ttl);
         }
       }
 
       this.logAction('用户登出成功');
-      return true;
+      return COMMON_STATUS.SUCCESS;
 
     } catch (error) {
       this.logError('用户登出失败', error);
@@ -387,7 +389,7 @@ class UserAuthService extends BaseService {
       });
 
       this.logAction('密码修改成功', { userId });
-      return true;
+      return COMMON_STATUS.SUCCESS;
 
     } catch (error) {
       this.logError('密码修改失败', error, { userId });

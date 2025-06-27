@@ -7,6 +7,8 @@
 
 // 引入基础控制器类，提供通用的控制器功能
 const BaseController = require('./BaseController');
+const { MERCHANT_STATUS, COMMON_STATUS } = require('../../common/constants/status');
+const { StatusHelper } = require('../../common/utils/statusHelper');
 
 class BaseMerchantController extends BaseController {
   /**
@@ -19,7 +21,7 @@ class BaseMerchantController extends BaseController {
     
     // 商户端特有配置
     this.userType = 'merchant';
-    this.requireMerchantAuth = true;
+    this.requireMerchantAuth = COMMON_STATUS.YES;
   }
 
   /**
@@ -48,7 +50,7 @@ class BaseMerchantController extends BaseController {
     }
 
     // 检查商户状态是否正常
-    if (req.user.merchantStatus !== undefined && req.user.merchantStatus !== 1) {
+    if (req.user.merchantStatus !== undefined && !StatusHelper.isMerchantActive(req.user.merchantStatus)) {
       return {
         status: 403,
         message: '商户账户状态异常，请联系管理员',

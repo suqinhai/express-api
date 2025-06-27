@@ -11,6 +11,8 @@ const BaseMerchantService = require('../base/BaseMerchantService');
 const bcrypt = require('bcrypt');
 // 引入jsonwebtoken用于JWT令牌操作
 const jwt = require('jsonwebtoken');
+const { MERCHANT_STATUS, USER_STATUS, COMMON_STATUS } = require('../../common/constants/status');
+const { StatusHelper } = require('../../common/utils/statusHelper');
 
 class MerchantAuthService extends BaseMerchantService {
   /**

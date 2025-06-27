@@ -6,6 +6,7 @@
 const { validationResult, body, query, param, header } = require('express-validator');
 const { getI18n } = require('../../common/i18n');
 const { logger } = require('../../common/logger');
+const { COMMON_STATUS } = require('../../common/constants/status');
 
 /**
  * 处理验证结果的中间件

@@ -9,6 +9,7 @@
 const BaseController = require('../base/BaseController');
 // 引入用户认证服务类，处理具体的认证业务逻辑
 const UserAuthService = require('../../services/user/UserAuthService');
+const { COMMON_STATUS } = require('../../common/constants/status');
 
 class UserAuthController extends BaseController {
   /**
@@ -276,7 +277,7 @@ class UserAuthController extends BaseController {
       const decoded = await this.userAuthService.verifyToken(token);
 
       return this.sendSuccess(res, '令牌有效', {
-        valid: true,
+        valid: COMMON_STATUS.SUCCESS,
         user: {
           id: decoded.id,
           username: decoded.username,

@@ -6,6 +6,8 @@
 const BaseService = require('../base/BaseService');
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
+const { USER_STATUS, USER_ROLE, COMMON_STATUS } = require('../../common/constants/status');
+const { StatusHelper } = require('../../common/utils/statusHelper');
 
 class AdminUserService extends BaseService {
   constructor() {
@@ -330,7 +332,7 @@ class AdminUserService extends BaseService {
 
       this.logAction('重置用户密码成功', { userId });
 
-      return true;
+      return COMMON_STATUS.SUCCESS;
 
     } catch (error) {
       this.logError('重置用户密码失败', error, { userId });
@@ -363,7 +365,7 @@ class AdminUserService extends BaseService {
 
       this.logAction('删除用户成功', { userId, username: user.username });
 
-      return true;
+      return COMMON_STATUS.SUCCESS;
 
     } catch (error) {
       this.logError('删除用户失败', error, { userId });
@@ -412,7 +414,7 @@ class AdminUserService extends BaseService {
    * @param {boolean} isCreate - 是否为创建操作
    * @returns {Object} 验证结果
    */
-  validateUserData(userData, isCreate = false) {
+  validateUserData(userData, isCreate = COMMON_STATUS.NO) {
     const rules = {
       username: isCreate ? {
         required: true,

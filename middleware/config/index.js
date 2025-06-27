@@ -107,6 +107,7 @@ const API_TYPE_CONFIG = {
   TYPES: {
     USER: 'user',
     ADMIN: 'admin',
+    MERCHANT: 'merchant',
     GENERAL: 'general'
   },
   

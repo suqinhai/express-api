@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const { USER_ROLE, USER_STATUS } = require('../../common/constants/status');
 
 module.exports = (sequelize) => {
   const User = sequelize.define('User', {
@@ -24,14 +25,15 @@ module.exports = (sequelize) => {
       }
     },
     role: {
-      type: DataTypes.ENUM('user', 'admin'),
-      defaultValue: 'user',
+      type: DataTypes.INTEGER,
+      defaultValue: USER_ROLE.USER,
       allowNull: false,
-      comment: '用户角色'
+      comment: '用户角色(0:普通用户,1:管理员,2:超级管理员,3:版主)'
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active'
+      type: DataTypes.INTEGER,
+      defaultValue: USER_STATUS.ACTIVE,
+      comment: '用户状态(0:未激活,1:已激活,2:已暂停,3:已封禁,4:已删除)'
     },
     last_login: {
       type: DataTypes.DATE

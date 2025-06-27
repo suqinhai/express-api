@@ -7,6 +7,7 @@
 
 // 引入基础服务类，提供通用的服务功能
 const BaseService = require('./BaseService');
+const { MERCHANT_STATUS, COMMON_STATUS } = require('../../common/constants/status');
 
 class BaseMerchantService extends BaseService {
   /**
@@ -19,7 +20,7 @@ class BaseMerchantService extends BaseService {
     
     // 商户端特有配置
     this.serviceType = 'merchant';
-    this.requireMerchantAuth = true;
+    this.requireMerchantAuth = COMMON_STATUS.YES;
   }
 
   /**
@@ -43,7 +44,7 @@ class BaseMerchantService extends BaseService {
       throw new Error('无权访问该数据');
     }
 
-    return true;
+    return COMMON_STATUS.SUCCESS;
   }
 
   /**

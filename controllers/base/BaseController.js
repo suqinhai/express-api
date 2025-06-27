@@ -7,6 +7,7 @@
 
 // 引入日志模块，用于记录控制器操作和错误信息
 const { logger } = require('../../common/logger');
+const { COMMON_STATUS } = require('../../common/constants/status');
 
 class BaseController {
   /**
@@ -42,8 +43,8 @@ class BaseController {
   sendSuccess(res, message = '操作成功', data = null, statusCode = 200) {
     // 构建标准成功响应对象
     const response = {
-      success: true,           // 成功标识
-      message,                 // 操作消息
+      success: COMMON_STATUS.SUCCESS,      // 成功标识
+      message,                             // 操作消息
       timestamp: new Date().toISOString()  // 响应时间戳
     };
 
@@ -67,8 +68,8 @@ class BaseController {
   sendError(res, message = '操作失败', statusCode = 400, errors = null) {
     // 构建标准错误响应对象
     const response = {
-      success: false,          // 失败标识
-      message,                 // 错误消息
+      success: COMMON_STATUS.FAILED,       // 失败标识
+      message,                             // 错误消息
       timestamp: new Date().toISOString()  // 响应时间戳
     };
 
@@ -98,8 +99,8 @@ class BaseController {
         limit: pagination.limit,                                         // 每页数量
         total: pagination.total,                                         // 总记录数
         totalPages: Math.ceil(pagination.total / pagination.limit),     // 总页数
-        hasNext: pagination.page < Math.ceil(pagination.total / pagination.limit),  // 是否有下一页
-        hasPrev: pagination.page > 1                                     // 是否有上一页
+        hasNext: pagination.page < Math.ceil(pagination.total / pagination.limit) ? COMMON_STATUS.YES : COMMON_STATUS.NO,  // 是否有下一页
+        hasPrev: pagination.page > 1 ? COMMON_STATUS.YES : COMMON_STATUS.NO                                     // 是否有上一页
       }
     });
   }

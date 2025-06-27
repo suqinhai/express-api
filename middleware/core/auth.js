@@ -10,6 +10,8 @@ const { PREFIX, TTL } = require('../../common/redis');
 const { sendUnauthorized, sendBadRequest } = require('../../common/routeHandler');
 const { AUTH_CONFIG } = require('../config');
 const { logger } = require('../../common/logger');
+const { USER_STATUS, USER_ROLE, AUTH_STATUS, COMMON_STATUS } = require('../../common/constants/status');
+const { StatusHelper } = require('../../common/utils/statusHelper');
 
 /**
  * 验证JWT token
@@ -74,7 +76,7 @@ const baseAuth = async (req, res, next) => {
 
     if (!token) {
       req.user = null;
-      req.isAuthenticated = false;
+      req.isAuthenticated = AUTH_STATUS.NOT_AUTHENTICATED;
       return next();
     }
 
@@ -89,7 +91,7 @@ const baseAuth = async (req, res, next) => {
       decoded = verifyToken(token);
       if (!decoded) {
         req.user = null;
-        req.isAuthenticated = false;
+        req.isAuthenticated = AUTH_STATUS.TOKEN_INVALID;
         return next();
       }
 
@@ -107,24 +109,24 @@ const baseAuth = async (req, res, next) => {
 
     if (!user) {
       req.user = null;
-      req.isAuthenticated = false;
+      req.isAuthenticated = AUTH_STATUS.NOT_AUTHENTICATED;
       return next();
     }
 
     // 检查用户状态
-    if (user.status !== 'active') {
+    if (!StatusHelper.isUserActive(user.status)) {
       req.user = null;
-      req.isAuthenticated = false;
+      req.isAuthenticated = AUTH_STATUS.NOT_AUTHENTICATED;
       return next();
     }
 
     req.user = user;
-    req.isAuthenticated = true;
+    req.isAuthenticated = AUTH_STATUS.AUTHENTICATED;
     next();
   } catch (error) {
     logger.error('基础认证中间件错误:', error);
     req.user = null;
-    req.isAuthenticated = false;
+    req.isAuthenticated = AUTH_STATUS.NOT_AUTHENTICATED;
     next();
   }
 };
@@ -154,7 +156,7 @@ const requireAuth = async (req, res, next) => {
   } catch (error) {
     logger.error('必须认证中间件错误:', error);
     res.status(500).json({
-      success: false,
+      success: COMMON_STATUS.FAILED,
       message: '认证服务异常'
     });
   }
@@ -180,7 +182,7 @@ const requireAdmin = async (req, res, next) => {
   } catch (error) {
     logger.error('管理员认证中间件错误:', error);
     res.status(500).json({
-      success: false,
+      success: COMMON_STATUS.FAILED,
       message: '认证服务异常'
     });
   }
@@ -212,7 +214,7 @@ const requireSuperAdmin = async (req, res, next) => {
   } catch (error) {
     logger.error('超级管理员认证中间件错误:', error);
     res.status(500).json({
-      success: false,
+      success: COMMON_STATUS.FAILED,
       message: '认证服务异常'
     });
   }
@@ -226,7 +228,7 @@ const requireSuperAdmin = async (req, res, next) => {
  */
 function requirePermissions(permissions, options = {}) {
   const permissionArray = Array.isArray(permissions) ? permissions : [permissions];
-  const { requireAll = false, requireAuth: needAuth = true } = options;
+  const { requireAll = COMMON_STATUS.NO, requireAuth: needAuth = COMMON_STATUS.YES } = options;
 
   return async (req, res, next) => {
     try {
@@ -272,7 +274,7 @@ function requirePermissions(permissions, options = {}) {
     } catch (error) {
       logger.error('权限检查中间件错误:', error);
       res.status(500).json({
-        success: false,
+        success: COMMON_STATUS.FAILED,
         message: '权限验证服务异常'
       });
     }
