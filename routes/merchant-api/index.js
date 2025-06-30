@@ -3,49 +3,6 @@ const express = require('express');
 // 创建Express路由器实例，专门处理商户端API路由
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: Merchant API
- *   description: 商户端接口 - 面向商户用户的功能接口
- */
-
-/**
- * @swagger
- * /api/merchant:
- *   get:
- *     summary: 商户端API信息
- *     description: 返回商户端可用的API信息
- *     tags: [Merchant API]
- *     responses:
- *       200:
- *         description: 成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: 商户端API服务正常
- *                 data:
- *                   type: object
- *                   properties:
- *                     type:
- *                       type: string
- *                       example: "merchant"
- *                     description:
- *                       type: string
- *                       example: "商户端接口，提供商户相关功能"
- *                     availableEndpoints:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["/api/merchant/auth", "/api/merchant/shop", "/api/merchant/products"]
- */
 // 商户端API根路由处理函数，返回API服务状态和可用端点信息
 router.get('/', function(req, res) {
   // 使用统一的成功响应方法返回商户端API信息

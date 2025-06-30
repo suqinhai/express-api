@@ -3,49 +3,6 @@ const express = require('express');
 // 创建Express路由器实例，专门处理管理端API路由
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: Admin API
- *   description: 管理后台接口 - 面向管理员的管理功能接口
- */
-
-/**
- * @swagger
- * /api/admin:
- *   get:
- *     summary: 管理端API信息
- *     description: 返回管理端可用的API信息
- *     tags: [Admin API]
- *     responses:
- *       200:
- *         description: 成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: 管理端API服务正常
- *                 data:
- *                   type: object
- *                   properties:
- *                     type:
- *                       type: string
- *                       example: "admin"
- *                     description:
- *                       type: string
- *                       example: "管理端接口，提供系统管理功能"
- *                     availableEndpoints:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["/api/admin/users", "/api/admin/system"]
- */
 // 管理端API根路由处理函数，返回API服务状态和可用端点信息
 router.get('/', function(req, res) {
   // 使用统一的成功响应方法返回管理端API信息

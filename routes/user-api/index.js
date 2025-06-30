@@ -3,49 +3,6 @@ const express = require('express');
 // 创建Express路由器实例，专门处理用户端API路由
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: User API
- *   description: 用户端接口 - 面向普通用户的功能接口
- */
-
-/**
- * @swagger
- * /api/user:
- *   get:
- *     summary: 用户端API信息
- *     description: 返回用户端可用的API信息
- *     tags: [User API]
- *     responses:
- *       200:
- *         description: 成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: 用户端API服务正常
- *                 data:
- *                   type: object
- *                   properties:
- *                     type:
- *                       type: string
- *                       example: "user"
- *                     description:
- *                       type: string
- *                       example: "用户端接口，提供用户相关功能"
- *                     availableEndpoints:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["/api/user/auth", "/api/user/profile"]
- */
 // 用户端API根路由处理函数，返回API服务状态和可用端点信息
 router.get('/', function(req, res) {
   // 使用统一的成功响应方法返回用户端API信息
