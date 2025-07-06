@@ -8,36 +8,39 @@ const { logger } = require('../../common/logger');
 /**
  * 中间件组合器
  * 将多个中间件组合成一个中间件函数
+ * 修复版本：修正index初始化错误和next函数调用方式，确保正确的Express中间件链集成
  * @param {...Function} middlewares - 中间件函数列表
  * @returns {Function} 组合后的中间件函数
  */
 function composeMiddlewares(...middlewares) {
   return (req, res, next) => {
-    let index = 0;
-    
+    let index = -1;
+
     function dispatch(i) {
       if (i <= index) {
         return Promise.reject(new Error('next() called multiple times'));
       }
-      
+
       index = i;
-      let fn = middlewares[i];
-      
+
+      // 如果已经执行完所有中间件，直接调用最终的next
       if (i === middlewares.length) {
-        fn = next;
+        return next();
       }
-      
+
+      let fn = middlewares[i];
+
       if (!fn) {
         return;
       }
-      
+
       try {
         return Promise.resolve(fn(req, res, () => dispatch(i + 1)));
       } catch (err) {
         return Promise.reject(err);
       }
     }
-    
+
     return dispatch(0);
   };
 }

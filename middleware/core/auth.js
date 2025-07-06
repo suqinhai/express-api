@@ -4,7 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { userModel } = require('../../models');
+const { merchantUserModel } = require('../../app/models');
 const CacheManager = require('../../common/redis/cache');
 const { PREFIX, TTL } = require('../../common/redis');
 const { sendUnauthorized, sendBadRequest } = require('../../common/routeHandler');
@@ -35,7 +35,7 @@ const verifyToken = (token, secret = AUTH_CONFIG.JWT.secret) => {
  */
 async function getUserById(userId) {
   try {
-    return await userModel.findByPk(userId);
+    return await merchantUserModel.findByPk(userId);
   } catch (error) {
     logger.error(`通过ID获取用户失败: ${userId}`, error);
     return null;
@@ -79,7 +79,7 @@ const baseAuth = async (req, res, next) => {
       req.isAuthenticated = AUTH_STATUS.NOT_AUTHENTICATED;
       return next();
     }
-
+    
     // 检查token缓存
     const tokenKey = `${token.substring(0, 10)}`;
     const cachedTokenData = await CacheManager.get(PREFIX.TOKEN, tokenKey);
@@ -147,7 +147,7 @@ const requireAuth = async (req, res, next) => {
         return res.sendUnauthorized('需要登录才能访问此接口');
       }
 
-      if (req.user.status !== 'active') {
+      if (!StatusHelper.isUserActive(req.user.status)) {
         return res.sendUnauthorized('用户状态异常');
       }
 
@@ -173,46 +173,13 @@ const requireAuth = async (req, res, next) => {
 const requireAdmin = async (req, res, next) => {
   try {
     await requireAuth(req, res, () => {
-      if (req.user.role !== 'admin') {
+      if (req.user.role !== 30) {
         return res.sendUnauthorized('权限不足，需要管理员权限');
       }
-
       next();
     });
   } catch (error) {
     logger.error('管理员认证中间件错误:', error);
-    res.status(500).json({
-      success: COMMON_STATUS.FAILED,
-      message: '认证服务异常'
-    });
-  }
-};
-
-/**
- * 超级管理员认证中间件
- * 要求用户必须是超级管理员
- * @param {Object} req - 请求对象
- * @param {Object} res - 响应对象
- * @param {Function} next - 下一个中间件
- * @returns {Promise<void>}
- */
-const requireSuperAdmin = async (req, res, next) => {
-  try {
-    await requireAdmin(req, res, () => {
-      if (req.user.role !== 'super_admin' && req.user.level !== 'super') {
-        logger.security('非超级管理员尝试访问超级管理员接口', {
-          adminId: req.user.id,
-          role: req.user.role,
-          path: req.path,
-          ip: req.ip
-        });
-        return res.sendUnauthorized('权限不足，需要超级管理员权限');
-      }
-
-      next();
-    });
-  } catch (error) {
-    logger.error('超级管理员认证中间件错误:', error);
     res.status(500).json({
       success: COMMON_STATUS.FAILED,
       message: '认证服务异常'
@@ -244,7 +211,7 @@ function requirePermissions(permissions, options = {}) {
         }
 
         // 检查用户状态
-        if (req.user.status !== 'active') {
+        if (req.user.status != '1') {
           return res.sendUnauthorized('用户状态异常，无法访问');
         }
 
@@ -285,7 +252,6 @@ module.exports = {
   baseAuth,
   requireAuth,
   requireAdmin,
-  requireSuperAdmin,
   requirePermissions,
   verifyToken,
   extractToken,
